@@ -13,21 +13,21 @@
 defineProps({
   title: {
     type: String,
-    default: 'Event Title'
+    default: 'Event Title',
   },
   date: {
     type: String,
-    default: 'Event Date'
+    default: 'Event Date',
   },
   description: {
     type: String,
-    default: 'Event Description'
+    default: 'Event Description',
   },
   image: {
     type: String,
-    default: ''
-  }
-});
+    default: '',
+  },
+})
 </script>
 
 <style scoped>
