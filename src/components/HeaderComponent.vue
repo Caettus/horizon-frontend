@@ -1,9 +1,6 @@
 <template>
   <!-- Vuetify App Bar -->
-  <v-app-bar
-    color="primary"
-    dark
-  >
+  <v-app-bar color="primary" dark>
     <!-- Titel/Logo -->
     <v-toolbar-title>Horizon</v-toolbar-title>
 
@@ -30,7 +27,7 @@ import router from '@/router'
 
 function goToEvents() {
   router.push('/events')
-  console.log("Events clicked!")
+  console.log('Events clicked!')
 }
 
 function goToProfile() {
