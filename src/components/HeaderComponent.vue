@@ -14,12 +14,8 @@
     <v-btn text @click="goToEvents">
       Events
     </v-btn>
-    <v-btn text @click="onLogin">
+    <v-btn text @click="goToProfile">
       Login
-    </v-btn>
-
-    <v-btn text @click="onSignUp">
-      Sign Up
     </v-btn>
   </v-app-bar>
 </template>
@@ -27,21 +23,26 @@
 <script setup>
 import router from '@/router'
 
-function onLogin() {
-  // Hier komt je inlog-functionaliteit / router push
-  console.log("Login clicked!")
-}
+// function onLogin() {
+//   // Hier komt je inlog-functionaliteit / router push
+//   console.log("Login clicked!")
+// }
 
 function goToEvents() {
   router.push('/events')
   console.log("Events clicked!")
 }
 
-function onSignUp() {
-  // Sign-up flow
-  console.log("Sign Up clicked!")
+function goToProfile() {
+  router.push('/profile')
+  console.log("Profile clicked!")
 }
-</script>
+
+// function onSignUp() {
+//   // Sign-up flow
+//   console.log("Sign Up clicked!")
+// }
+// </script>
 
 <style scoped>
 /* Eventueel kun je hier extra styling doen,
