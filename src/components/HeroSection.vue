@@ -1,58 +1,80 @@
 <!-- src/components/HeroSection.vue -->
 <template>
-<v-parallax src="https://images.unsplash.com/photo-1650556856632-a4c355de295d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" height="70vh">
-  <div class="overlay"></div>
-  <div class="hero-content">
-    <h1 class="display-2 font-weight-bold white--text">Welkom bij Horizon</h1>
-    <p class="subtitle-1 white--text">
-      Ontdek en organiseer jouw evenementen, zowel online als offline!
-    </p>
-    <div class="cta-buttons">
-      <v-btn large color="primary" @click="handleLogin">Log in</v-btn>
-      <v-btn large outlined color="primary" @click="handleSignUp">Registreer</v-btn>
-    </div>
-  </div>
-</v-parallax>
-
+  <v-sheet
+    class="hero-sheet"
+    height="100vh"
+    tile
+    elevation="0"
+  >
+    <div class="hero-overlay" />
+    <v-container
+      class="fill-height d-flex flex-column justify-center align-center text-center"
+    >
+      <h1 class="hero-title">Welkom bij Horizon</h1>
+      <p class="hero-subtitle">
+        Ontdek events, connect met nieuwe mensen én organiseer je eigen meetups.
+      </p>
+      <div class="cta-buttons">
+        <v-btn large color="secondary" @click="handleLogin">Log in</v-btn>
+        <v-btn large outlined color="secondary" @click="handleSignUp">
+          Registreer
+        </v-btn>
+      </div>
+    </v-container>
+  </v-sheet>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
 const router = useRouter()
-
-function handleLogin() {
-  router.push('/login')
-}
-function handleSignUp() {
-  router.push('/signup')
-}
+const handleLogin = () => router.push('/login')
+const handleSignUp = () => router.push('/signup')
 </script>
 
 <style scoped>
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1;
+.hero-sheet {
+  position: relative;
+  background: linear-gradient(135deg, #5e60ce, #64dfdf);
+  overflow: hidden;
 }
 
-.hero-content {
+.hero-overlay {
+  content: '';
   position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
+  inset: 0;
+  backdrop-filter: blur(4px);
+  opacity: 0.2;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 900;
+  color: white;
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 1rem;
+  animation: fadeInUp 1.2s ease-out forwards;
 }
 
 .cta-buttons {
-  margin-top: 20px;
+  margin-top: 2rem;
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  gap: 1.5rem;
+  animation: fadeInUp 1.4s ease-out forwards;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
