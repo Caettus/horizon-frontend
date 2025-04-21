@@ -13,21 +13,22 @@
       </v-col>
 
       <v-col cols="12" md="4">
-        <v-menu close-on-content-click>
-          <template #activator="{ props }">
-            <v-text-field v-bind="props" v-model="event.startDate" label="Startdatum" prepend-inner-icon="mdi-calendar" readonly />
-          </template>
-          <v-date-picker v-model="event.startDate" />
-        </v-menu>
+        <v-text-field
+          v-model="event.startDate"
+          label="Startdatum en tijd"
+          type="datetime-local"
+          :rules="[r.required]"
+        />
       </v-col>
 
       <v-col cols="12" md="4">
-        <v-menu close-on-content-click>
-          <template #activator="{ props }">
-            <v-text-field v-bind="props" v-model="event.endDate" label="Einddatum" prepend-inner-icon="mdi-calendar" readonly />
-          </template>
-          <v-date-picker v-model="event.endDate" />
-        </v-menu>
+        <v-text-field
+          v-model="event.endDate"
+          label="Einddatum en tijd"
+          type="datetime-local"
+          :rules="[r.required, r.endAfterStart]"
+          :min="event.startDate"
+        />
       </v-col>
 
       <v-col cols="12" md="4">
@@ -107,6 +108,11 @@ const loading = ref(false)
 
 const r = {
   required: v => !!v || 'Verplicht veld',
+  endAfterStart: v =>
+    !v ||
+    !event.value.startDate ||
+    new Date(v) >= new Date(event.value.startDate) ||
+    'Einddatum/tijd moet na de start liggen'
 }
 
 async function onSubmit () {
