@@ -29,7 +29,7 @@ defineProps({
   },
 })
 
-const placeholder = 'https://via.placeholder.com/400x200?text=Geen+afbeelding'
+const placeholder = 'https://images.unsplash.com/photo-1506869640319-fe1a24fd76dc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
 </script>
 
 <style scoped>
