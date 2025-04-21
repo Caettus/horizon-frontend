@@ -101,6 +101,7 @@ const event = ref({
   tags: [],
   isPrivate: false,
   organizerId: null, // vul vanuit auth‑provider indien beschikbaar
+  imageUrl: '',
 })
 
 const valid = ref(false)
@@ -135,7 +136,7 @@ async function onSubmit () {
       errorMsg.value = 'Ongeldige invoer. Controleer de gegevens.'
     }
     else {
-      errorMsg.value = err.response?.data?.message || 'Er is een fout opgetreden. Probeer het opnieuw.'
+      errorMsg.value = err.response?.data?.message
     }
   }
   finally {
