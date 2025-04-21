@@ -61,9 +61,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
 import EventCard from '@/components/EventCard.vue'
+
+const route = useRoute()
 
 const events = ref([])
 const filters = ref({ search: '', category: [] })
@@ -95,6 +98,10 @@ const filtered = computed(() => {
 })
 
 onMounted(loadEvents)
+
+// wanneer routed van /events/create terug‑‑> refresh list
+watch(() => route.fullPath, () => loadEvents())
+
 </script>
 
 <style scoped>
