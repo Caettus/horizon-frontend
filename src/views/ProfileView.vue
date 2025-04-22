@@ -17,6 +17,12 @@
           <v-card-text class="text-center pt-6">
             <h2 class="font-weight-bold mb-2">{{ user.username }}</h2>
             <p class="subtitle-1 grey--text">{{ user.email }}</p>
+            <v-divider class="my-4" />
+            <div class="text-center mt-4">
+              <p class="subtitle-2 font-weight-medium mb-2">Aantal events aangemaakt:</p>
+              <h3 class="font-weight-bold mb-2">{{ eventCount }}</h3>
+              <v-btn small color="primary" @click="fetchEventCount">Ververs teller</v-btn>
+            </div>
           </v-card-text>
 
           <v-divider />
@@ -72,9 +78,11 @@ const dialog = ref(false)
 const user = reactive({ username: '', email: '', avatar: '' })
 const formData = reactive({ username: '', email: '' })
 const error = ref('')
+const eventCount = ref(0)
 
 const defaultAvatar = 'https://cdn.vuetifyjs.com/images/john.jpg'
 
+// Profiel ophalen
 async function fetchProfile() {
   try {
     const { data } = await axios.get('/api/users/1')
@@ -83,6 +91,17 @@ async function fetchProfile() {
     user.avatar = data.avatarUrl || defaultAvatar
   } catch (e) {
     error.value = 'Kon profiel niet laden.'
+  }
+}
+
+// Event count ophalen
+async function fetchEventCount() {
+  try {
+    const { data } = await axios.get('/api/internal/eventbus/userservice/event-count')
+    eventCount.value = data.count ?? 0
+  } catch (e) {
+    console.error('Fout bij ophalen event count', e)
+    eventCount.value = -1
   }
 }
 
@@ -109,7 +128,10 @@ async function saveProfile() {
   }
 }
 
-onMounted(fetchProfile)
+onMounted(() => {
+  fetchProfile()
+  fetchEventCount()
+})
 </script>
 
 <style scoped>
