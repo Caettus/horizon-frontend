@@ -15,8 +15,8 @@
 
           <!-- User Info -->
           <v-card-text class="text-center pt-6">
-            <h2 class="font-weight-bold mb-2">{{ user.username }}</h2>
-            <p class="subtitle-1 grey--text">{{ user.email }}</p>
+            <h2 class="font-weight-bold mb-2">{{$keycloak.tokenParsed.preferred_username}}</h2>
+            <p class="subtitle-1 grey--text">{{$keycloak.tokenParsed.email}}</p>
             <v-divider class="my-4" />
             <div class="text-center mt-4">
               <p class="subtitle-2 font-weight-medium mb-2">Aantal events aangemaakt:</p>

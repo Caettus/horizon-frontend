@@ -10,13 +10,15 @@
           </v-btn>
         </v-col>
 
-        <v-spacer></v-spacer>
+        <v-spacer />
 
         <!-- Desktop navigatie -->
         <v-col cols="auto" class="d-none d-md-flex">
           <v-btn text @click="goToEvents">Events</v-btn>
           <v-btn text @click="goToCreateEvent">New Event</v-btn>
           <v-btn text @click="goToProfile">Profile</v-btn>
+          <!-- Logout knop -->
+          <v-btn text @click="logout">Log uit</v-btn>
         </v-col>
 
         <!-- Mobile navigatie (hamburger-menu) -->
@@ -34,11 +36,15 @@
         <v-list-item link @click="goToEvents">
           <v-list-item-title>Events</v-list-item-title>
         </v-list-item>
-        <v-list-item link @click="goToCreateEvents">
+        <v-list-item link @click="goToCreateEvent">
           <v-list-item-title>New Event</v-list-item-title>
         </v-list-item>
         <v-list-item link @click="goToProfile">
           <v-list-item-title>Profile</v-list-item-title>
+        </v-list-item>
+        <v-divider />
+        <v-list-item link @click="logout">
+          <v-list-item-title>Log uit</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -48,6 +54,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import keycloak from '../keycloak'  // import je Keycloak-instance
 
 const router = useRouter()
 const drawer = ref(false)
@@ -69,5 +76,11 @@ function goToProfile() {
 }
 function toggleMenu() {
   drawer.value = !drawer.value
+}
+function logout() {
+  // invalidate Keycloak-session en redirect terug naar je root
+  keycloak.logout({
+    redirectUri: window.location.origin
+  })
 }
 </script>
