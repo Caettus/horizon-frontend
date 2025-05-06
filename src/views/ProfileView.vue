@@ -1,69 +1,130 @@
 <template>
   <v-container class="py-12">
     <v-row justify="center">
-      <v-col cols="12" md="8">
-        <v-card elevation="4" class="overflow-hidden">
-          <!-- Banner Section -->
-          <div class="profile-banner" />
+      <v-col cols="12" md="8" lg="7">
+        <div v-if="isAuthenticated">
+          <v-card elevation="4" class="overflow-hidden profile-card">
+            <div class="profile-banner" :style="{ backgroundImage: `url(${user.banner || defaultBanner})` }" />
 
-          <!-- Avatar -->
-          <div class="avatar-wrapper">
-            <v-avatar size="120">
-              <img :src="user.avatar || defaultAvatar" alt="Avatar" />
-            </v-avatar>
-          </div>
-
-          <!-- User Info -->
-          <v-card-text class="text-center pt-6">
-            <h2 class="font-weight-bold mb-2">{{$keycloak.tokenParsed.preferred_username}}</h2>
-            <p class="subtitle-1 grey--text">{{$keycloak.tokenParsed.email}}</p>
-            <v-divider class="my-4" />
-            <div class="text-center mt-4">
-              <p class="subtitle-2 font-weight-medium mb-2">Aantal events aangemaakt:</p>
-              <h3 class="font-weight-bold mb-2">{{ eventCount }}</h3>
-              <v-btn small color="primary" @click="fetchEventCount">Ververs teller</v-btn>
+            <div class="avatar-wrapper">
+              <v-avatar size="120" class="elevation-6">
+                <img :src="user.avatar || defaultAvatar" :alt="user.username || 'User Avatar'" />
+              </v-avatar>
             </div>
-          </v-card-text>
 
-          <v-divider />
+            <v-card-text class="text-center pt-6 pb-4">
+              <h1 class="text-h5 font-weight-bold mb-1">{{ user.username }}</h1>
+              <p class="subtitle-1 grey--text text--darken-1 mb-4">{{ user.email }}</p>
+              <v-divider class="my-4" />
+              <div class="d-flex justify-space-around align-center my-4">
+                <div>
+                  <p class="subtitle-2 font-weight-medium grey--text text--darken-2 mb-1">Events Created</p>
+                  <h2 class="text-h5 font-weight-bold primary--text">{{ eventCount }}</h2>
+                </div>
+                <v-btn icon color="primary" @click="fetchEventCount" :loading="loadingEventCount" title="Refresh event count">
+                  <v-icon>mdi-refresh</v-icon>
+                </v-btn>
+              </div>
+            </v-card-text>
 
-          <!-- Actions -->
-          <v-card-actions class="justify-center">
-            <v-btn color="secondary" @click="openDialog">Bewerk Profiel</v-btn>
-          </v-card-actions>
-        </v-card>
+            <v-divider />
+
+            <v-card-actions class="justify-center pa-4">
+              <v-btn color="secondary" rounded @click="openDialog" prepend-icon="mdi-pencil">
+                Edit Profile
+              </v-btn>
+              <v-btn color="primary" rounded @click="navigateToKeycloakAccount" prepend-icon="mdi-account-cog" class="ml-2">
+                Manage Account
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </div>
+
+        <div v-else>
+          <v-card elevation="4" class="text-center pa-8 guest-card">
+            <v-icon size="80" color="primary" class="mb-6">mdi-account-lock-outline</v-icon>
+            <h2 class="text-h5 font-weight-bold mb-3">Your Profile Awaits!</h2>
+            <p class="subtitle-1 grey--text text--darken-1 mb-8">
+              Please log in or create an account to view and manage your profile,
+              track your events, and connect with the Horizon community.
+            </p>
+            <v-row>
+              <v-col cols="12" sm="6">
+                <v-btn color="primary" block large rounded @click="handleLogin" prepend-icon="mdi-login-variant">
+                  Login
+                </v-btn>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-btn color="secondary" block large rounded @click="handleRegister" prepend-icon="mdi-account-plus-outline">
+                  Register
+                </v-btn>
+              </v-col>
+            </v-row>
+            <p class="text-caption grey--text mt-8">
+              Joining is quick and opens up a world of possibilities!
+            </p>
+          </v-card>
+        </div>
       </v-col>
     </v-row>
 
-    <!-- Edit Profile Dialog -->
-    <v-dialog v-model="dialog" max-width="500">
+    <v-dialog v-if="isAuthenticated" v-model="dialog" max-width="550px" persistent>
       <v-card>
-        <v-card-title class="headline">Profiel Bewerken</v-card-title>
+        <v-card-title class="text-h6 primary white--text">
+          <v-icon left dark>mdi-pencil-box</v-icon>
+          Edit Your Profile
+        </v-card-title>
         <v-divider />
-        <v-card-text>
-          <v-form ref="form">
+        <v-card-text class="pt-5">
+          <v-form ref="profileFormRef" v-model="isFormValid">
             <v-text-field
               v-model="formData.username"
-              label="Naam"
+              label="Display Name"
+              prepend-inner-icon="mdi-account"
+              variant="outlined"
               required
-              :rules="[v => !!v || 'Naam is verplicht']"
+              :rules="[v => !!v || 'Display Name is required']"
+              class="mb-3"
             />
             <v-text-field
               v-model="formData.email"
-              label="Email"
+              label="Email Address"
+              prepend-inner-icon="mdi-email"
+              variant="outlined"
               type="email"
               required
-              :rules="[v => /\S+@\S+\.\S+/.test(v) || 'Ongeldig email']"
+              :rules="[
+                v => !!v || 'Email is required',
+                v => /\S+@\S+\.\S+/.test(v) || 'Email must be valid'
+              ]"
+              class="mb-3"
+              disabled
+              hint="Email cannot be changed here. Use 'Manage Account'."
+              persistent-hint
+            />
+            <v-text-field
+              v-model="formData.avatar"
+              label="Avatar URL (Optional)"
+              prepend-inner-icon="mdi-image"
+              variant="outlined"
+              class="mb-3"
             />
           </v-form>
-          <v-alert v-if="error" type="error" dense class="mt-3">
+          <v-alert v-if="error" type="error" dense class="mt-3" prominent border="left">
             {{ error }}
           </v-alert>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="pa-4">
           <v-spacer />
-          <v-btn text @click="dialog = false">Annuleren</v-btn>
-          <v-btn color="secondary" @click="saveProfile">Opslaan</v-btn>
+          <v-btn text @click="closeDialog">Cancel</v-btn>
+          <v-btn
+            color="primary"
+            @click="saveProfile"
+            :loading="savingProfile"
+            :disabled="!isFormValid || savingProfile"
+          >
+            Save Changes
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -71,83 +132,254 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, reactive, onMounted, computed, inject } from 'vue';
+import { useRouter } from 'vue-router'; // For login/register redirects
+import axios from 'axios'; // Assuming you have axios configured
 
-const dialog = ref(false)
-const user = reactive({ username: '', email: '', avatar: '' })
-const formData = reactive({ username: '', email: '' })
-const error = ref('')
-const eventCount = ref(0)
+// --- Keycloak & Router ---
+const keycloak = inject('keycloak');
+const router = useRouter();
 
-const defaultAvatar = 'https://cdn.vuetifyjs.com/images/john.jpg'
+// --- State References ---
+const dialog = ref(false);
+const error = ref('');
+const eventCount = ref(0);
+const loadingEventCount = ref(false);
+const savingProfile = ref(false);
+const profileFormRef = ref(null); // Reference to the v-form
+const isFormValid = ref(false); // Validity of the form
 
-// Profiel ophalen
-async function fetchProfile() {
+// --- User Data ---
+const user = reactive({
+  id: null, // Store user ID from Keycloak if needed for API calls
+  username: '',
+  email: '',
+  avatar: '',
+  banner: '' // Example: if you have a banner image
+});
+
+const formData = reactive({
+  username: '',
+  email: '',
+  avatar: ''
+});
+
+// --- Defaults & Computed Properties ---
+const defaultAvatar = 'https://cdn.vuetifyjs.com/images/john.jpg'; // Default if no avatar
+const defaultBanner = 'https://images.unsplash.com/photo-1508615039623-a25605d2b022?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'; // Default banner
+
+const isAuthenticated = computed(() => keycloak && keycloak.authenticated);
+
+// --- Methods ---
+
+// Initialize profile data
+const initializeProfile = () => {
+  if (isAuthenticated.value && keycloak.tokenParsed) {
+    const token = keycloak.tokenParsed;
+    user.id = token.sub; // Subject ID from Keycloak, useful for API calls
+    user.username = token.preferred_username || 'N/A';
+    user.email = token.email || 'N/A';
+    // Try to get avatar from Keycloak custom attributes if configured (e.g., 'avatar_url')
+    user.avatar = token.avatar_url || defaultAvatar;
+    user.banner = token.banner_url || defaultBanner; // Example
+
+    // Copy to form data for editing
+    formData.username = user.username;
+    formData.email = user.email; // Email is usually not changed here directly
+    formData.avatar = user.avatar === defaultAvatar ? '' : user.avatar;
+
+    fetchBackendProfileDetails(); // Fetch additional details from your backend if any
+    fetchEventCount();
+  } else {
+    // Reset user data if not authenticated
+    Object.assign(user, { id: null, username: '', email: '', avatar: defaultAvatar, banner: defaultBanner });
+    eventCount.value = 0;
+  }
+};
+
+// Fetch additional profile details from your backend (if any)
+async function fetchBackendProfileDetails() {
+  if (!user.id) return; // No user ID to fetch for
   try {
-    const { data } = await axios.get('/api/users/1')
-    user.username = data.username || 'Onbekend'
-    user.email = data.email || 'Onbekend'
-    user.avatar = data.avatarUrl || defaultAvatar
+    // Example: Replace '/api/users/me' with your actual endpoint.
+    // This endpoint should use the JWT from Keycloak to identify the user.
+    const response = await axios.get(`/api/profile/me`); // Using 'me' convention
+    if (response.data) {
+      // Update user object with backend data, preferring it if available
+      user.username = response.data.username || user.username;
+      user.avatar = response.data.avatarUrl || user.avatar;
+      user.banner = response.data.bannerUrl || user.banner;
+      // Update formData as well if these fields are editable and fetched from backend
+      formData.username = user.username;
+      formData.avatar = user.avatar === defaultAvatar ? '' : user.avatar;
+    }
   } catch (e) {
-    error.value = 'Kon profiel niet laden.'
+    console.warn('Could not load additional backend profile details:', e.message);
+    // Don't set a global error here, as basic info from Keycloak is still shown
   }
 }
 
-// Event count ophalen
+
+// Fetch event count
 async function fetchEventCount() {
+  if (!isAuthenticated.value) return;
+  loadingEventCount.value = true;
   try {
-    const { data } = await axios.get('/api/internal/eventbus/userservice/event-count')
-    eventCount.value = data.count ?? 0
+    // Ensure your backend API '/api/internal/eventbus/userservice/event-count'
+    // is secured and uses the Keycloak token to get the count for the logged-in user.
+    const { data } = await axios.get('/api/internal/eventbus/userservice/event-count');
+    eventCount.value = data.count ?? 0;
   } catch (e) {
-    console.error('Fout bij ophalen event count', e)
-    eventCount.value = -1
+    console.error('Error fetching event count:', e);
+    eventCount.value = 'N/A'; // Indicate error
+  } finally {
+    loadingEventCount.value = false;
   }
 }
 
+// Dialog actions
 function openDialog() {
-  formData.username = user.username
-  formData.email = user.email
-  error.value = ''
-  dialog.value = true
+  if (!isAuthenticated.value) return;
+  // Reset form data to current user state from Keycloak/backend
+  formData.username = user.username;
+  formData.email = user.email; // Keep email display, but it's often not editable here
+  formData.avatar = user.avatar === defaultAvatar ? '' : user.avatar;
+  error.value = '';
+  dialog.value = true;
 }
 
-async function saveProfile() {
-  try {
-    const form = form.value
-    if (!form.validate()) return
-    await axios.put('/api/users/1', {
-      username: formData.username,
-      email: formData.email,
-    })
-    user.username = formData.username
-    user.email = formData.email
-    dialog.value = false
-  } catch (e) {
-    error.value = 'Opslaan mislukt. Probeer opnieuw.'
+function closeDialog() {
+  dialog.value = false;
+  if (profileFormRef.value) {
+    profileFormRef.value.resetValidation();
   }
 }
 
+// Save profile (to your backend)
+async function saveProfile() {
+  if (!isAuthenticated.value || !profileFormRef.value) return;
+
+  // Validate form
+  const { valid } = await profileFormRef.value.validate();
+  if (!valid) {
+    error.value = 'Please correct the errors in the form.';
+    return;
+  }
+
+  savingProfile.value = true;
+  error.value = '';
+  try {
+    // PUT to your backend API. Your backend should handle updating its user record.
+    // It should NOT try to update Keycloak password or core identity details directly
+    // unless it has specific service account privileges and logic for it.
+    // Typically, users update their own Keycloak profile via Keycloak's account mgmt.
+    const payload = {
+      username: formData.username,
+      // email: formData.email, // Usually not updated this way, Keycloak handles it.
+      avatarUrl: formData.avatar || null, // Send null if empty to remove avatar
+    };
+    // Replace '/api/profile/me' with your actual update endpoint
+    await axios.put(`/api/profile/me`, payload);
+
+    // Update local state
+    user.username = formData.username;
+    user.avatar = formData.avatar || defaultAvatar;
+
+    dialog.value = false;
+    // Optionally, show a success snackbar
+  } catch (e) {
+    console.error('Profile save failed:', e);
+    error.value = e.response?.data?.message || 'Saving profile failed. Please try again.';
+  } finally {
+    savingProfile.value = false;
+  }
+}
+
+// --- Keycloak Actions for Unauthenticated Users ---
+function handleLogin() {
+  if (keycloak && !keycloak.authenticated) {
+    // Redirect to the original page after login, or home if none specified
+    const redirectUri = window.location.origin + (router.currentRoute.value.query.redirect || '/');
+    keycloak.login({ redirectUri });
+  }
+}
+
+function handleRegister() {
+  if (keycloak && !keycloak.authenticated) {
+    keycloak.register(); // Redirects to Keycloak registration page
+  }
+}
+
+function navigateToKeycloakAccount() {
+  if (keycloak && typeof keycloak.accountManagement === 'function') {
+    keycloak.accountManagement().catch(err => console.error("Failed to navigate to account management:", err));
+  } else {
+    alert("Account management is not available.");
+  }
+}
+
+// --- Lifecycle Hooks ---
 onMounted(() => {
-  fetchProfile()
-  fetchEventCount()
-})
+  // Wait for Keycloak to be initialized (as per your main.js)
+  if (keycloak) { // Check if $keycloak is injected
+    initializeProfile();
+  } else {
+    // Handle case where Keycloak might not be ready, though your main.js should ensure it is.
+    // This could be a fallback or an error state.
+    console.warn("Keycloak instance not available on mount for profile page.");
+  }
+});
 </script>
 
 <style scoped>
 .profile-banner {
-  height: 120px;
-  background: linear-gradient(135deg, #5e60ce, #64dfdf);
+  height: 180px; /* Increased height */
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px 4px 0 0; /* Match v-card default border-radius if any */
+  background-color: #e0e0e0; /* Fallback color */
 }
 
 .avatar-wrapper {
-  position: relative;
-  top: -60px;
+  margin-top: -60px; /* Pull avatar up over banner */
   display: flex;
   justify-content: center;
+  margin-bottom: -16px; /* Adjust spacing for content below */
 }
 
-.v-avatar {
-  border: 4px solid white;
+.v-avatar img {
+  border: 4px solid white; /* White border around avatar */
+  object-fit: cover;
+}
+
+.profile-card {
+  border-radius: 12px !important; /* More rounded cards */
+}
+
+.guest-card {
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.9); /* Slightly transparent for effect if you add a page background */
+}
+
+.v-btn {
+  text-transform: none; /* Keep button text casing as is */
+  letter-spacing: 0.5px;
+}
+
+.grey--text.text--darken-1 {
+  color: #757575 !important;
+}
+.grey--text.text--darken-2 {
+  color: #616161 !important;
+}
+.primary--text {
+ color: #1976D2 !important; /* Ensure your Vuetify primary color is used */
+}
+.white--text {
+  color: #FFFFFF !important;
+}
+
+.v-card-title.primary {
+  background-color: #1976D2 !important; /* Vuetify primary color */
 }
 </style>

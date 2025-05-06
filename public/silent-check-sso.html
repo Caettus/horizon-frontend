@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Keycloak Silent Check SSO</title>
+  </head>
+  <body>
+    <script>
+      // When Keycloak does a silent SSO check, it loads this page in an iframe.
+      // Once it lands here, we post the full URL (with tokens) back to the parent window.
+      window.onload = function() {
+        parent.postMessage(location.href, window.location.origin);
+      };
+    </script>
+  </body>
+</html>

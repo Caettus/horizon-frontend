@@ -17,8 +17,16 @@
           <v-btn text @click="goToEvents">Events</v-btn>
           <v-btn text @click="goToCreateEvent">New Event</v-btn>
           <v-btn text @click="goToProfile">Profile</v-btn>
-          <!-- Logout knop -->
-          <v-btn text @click="logout">Log uit</v-btn>
+
+          <!-- Auth buttons -->
+          <transition name="fade">
+            <!-- Logout knop, alleen zichtbaar als ingelogd -->
+            <v-btn v-if="isAuthenticated" text @click="logout">Log uit</v-btn>
+          </transition>
+          <transition name="fade">
+            <!-- Login knop, alleen zichtbaar als niet ingelogd -->
+            <v-btn v-if="!isAuthenticated" text @click="goToLogin">Log in</v-btn>
+          </transition>
         </v-col>
 
         <!-- Mobile navigatie (hamburger-menu) -->
@@ -43,8 +51,9 @@
           <v-list-item-title>Profile</v-list-item-title>
         </v-list-item>
         <v-divider />
-        <v-list-item link @click="logout">
-          <v-list-item-title>Log uit</v-list-item-title>
+        <!-- Auth optie in drawer -->
+        <v-list-item link @click="isAuthenticated ? logout() : login()">
+          <v-list-item-title>{{ isAuthenticated ? 'Log uit' : 'Log in' }}</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -54,10 +63,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import keycloak from '../keycloak'  // import je Keycloak-instance
+import keycloak from '../keycloak'
 
 const router = useRouter()
 const drawer = ref(false)
+const isAuthenticated = ref(false)
+
 
 function goToHome() {
   router.push('/')
@@ -78,9 +89,19 @@ function toggleMenu() {
   drawer.value = !drawer.value
 }
 function logout() {
-  // invalidate Keycloak-session en redirect terug naar je root
-  keycloak.logout({
-    redirectUri: window.location.origin
-  })
+  keycloak.logout({ redirectUri: window.location.origin })
+}
+function goToLogin() {
+  router.push({ name: 'Login', query: { redirect: router.fullPath } })
+  drawer.value = false
 }
 </script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>
