@@ -26,13 +26,12 @@
 
           <!-- Auth buttons -->
           <transition name="fade">
-            <!-- Logout knop, alleen zichtbaar als ingelogd -->
-            <v-btn v-if="isAuthenticated" text @click="logout">Log uit</v-btn>
+            <v-btn v-if="isLoggedIn" text @click="handleLogout">Log uit</v-btn>
           </transition>
           <transition name="fade">
-            <!-- Login knop, alleen zichtbaar als niet ingelogd -->
-            <v-btn v-if="!isAuthenticated" text @click="goToLogin">Log in</v-btn>
+            <v-btn v-if="!isLoggedIn" text @click="handleLogin">Log in</v-btn>
           </transition>
+
         </v-col>
 
         <!-- Mobile navigatie (hamburger-menu) -->
@@ -58,8 +57,8 @@
         </v-list-item>
         <v-divider />
         <!-- Auth optie in drawer -->
-        <v-list-item link @click="isAuthenticated ? logout() : login()">
-          <v-list-item-title>{{ isAuthenticated ? 'Log uit' : 'Log in' }}</v-list-item-title>
+        <v-list-item link @click="authStore.isLoggedIn ? handleLogout() : handleLogin()">
+          <v-list-item-title>{{ isLoggedIn ? 'Log uit' : 'Log in' }}</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -67,14 +66,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import keycloak from '../keycloak'
+import { useAuthStore } from '@/stores/auth'
 import logo from '@/assets/logo.png'
 
 const router = useRouter()
 const drawer = ref(false)
-const isAuthenticated = computed(() => keycloak && keycloak.authenticated)
+const authStore = useAuthStore()
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+
+// Update auth state when component mounts
+onMounted(() => {
+  authStore.updateAuthState()
+})
 
 function goToHome() {
   router.push('/')
@@ -94,12 +99,19 @@ function goToProfile() {
 function toggleMenu() {
   drawer.value = !drawer.value
 }
-function logout() {
-  keycloak.logout({ redirectUri: window.location.origin })
+async function handleLogout() {
+  try {
+    await authStore.logout()
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
 }
-function goToLogin() {
-  router.push({ name: 'Login', query: { redirect: router.fullPath } })
-  drawer.value = false
+async function handleLogin() {
+  try {
+    await authStore.login()
+  } catch (error) {
+    console.error('Login failed:', error)
+  }
 }
 </script>
 
