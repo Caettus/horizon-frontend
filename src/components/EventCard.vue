@@ -1,5 +1,5 @@
 <template>
-  <v-card class="event-card" elevation="2" hover>
+  <v-card class="event-card" elevation="2" hover @click="$emit('click', event)" cursor="pointer">
     <v-img
       :src="event.image || placeholder"
       height="180"
@@ -12,12 +12,6 @@
       </div>
       <p class="text-body-2 mb-4">{{ event.description }}</p>
     </v-card-text>
-    <v-card-actions>
-      <v-spacer />
-      <v-btn text color="primary" @click="$emit('click', event)">
-        Bekijk
-      </v-btn>
-    </v-card-actions>
   </v-card>
 </template>
 
@@ -28,6 +22,8 @@ defineProps({
     required: true,
   },
 })
+
+
 
 const placeholder = 'https://images.unsplash.com/photo-1506869640319-fe1a24fd76dc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
 </script>

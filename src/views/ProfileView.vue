@@ -173,65 +173,46 @@ const isAuthenticated = computed(() => keycloak && keycloak.authenticated);
 // --- Methods ---
 
 // Initialize profile data
-const initializeProfile = () => {
-  if (isAuthenticated.value && keycloak.tokenParsed) {
-    const token = keycloak.tokenParsed;
-    user.id = token.sub; // Subject ID from Keycloak, useful for API calls
-    user.username = token.preferred_username || 'N/A';
-    user.email = token.email || 'N/A';
-    // Try to get avatar from Keycloak custom attributes if configured (e.g., 'avatar_url')
-    user.avatar = token.avatar_url || defaultAvatar;
-    user.banner = token.banner_url || defaultBanner; // Example
+async function initializeProfile() {
+  if (!isAuthenticated.value) return;
 
-    // Copy to form data for editing
-    formData.username = user.username;
-    formData.email = user.email; // Email is usually not changed here directly
-    formData.avatar = user.avatar === defaultAvatar ? '' : user.avatar;
-
-    fetchBackendProfileDetails(); // Fetch additional details from your backend if any
-    fetchEventCount();
-  } else {
-    // Reset user data if not authenticated
-    Object.assign(user, { id: null, username: '', email: '', avatar: defaultAvatar, banner: defaultBanner });
-    eventCount.value = 0;
-  }
-};
-
-// Fetch additional profile details from your backend (if any)
-async function fetchBackendProfileDetails() {
-  if (!user.id) return; // No user ID to fetch for
   try {
-    // Example: Replace '/api/users/me' with your actual endpoint.
-    // This endpoint should use the JWT from Keycloak to identify the user.
-    const response = await axios.get(`/api/profile/me`); // Using 'me' convention
-    if (response.data) {
-      // Update user object with backend data, preferring it if available
-      user.username = response.data.username || user.username;
-      user.avatar = response.data.avatarUrl || user.avatar;
-      user.banner = response.data.bannerUrl || user.banner;
-      // Update formData as well if these fields are editable and fetched from backend
+    // Get user info from Keycloak token
+    const tokenParsed = keycloak.tokenParsed;
+    if (tokenParsed) {
+      user.id = tokenParsed.sub;
+      user.username = tokenParsed.preferred_username || tokenParsed.name || '';
+      user.email = tokenParsed.email || '';
+
+      // Initialize form data with current values
       formData.username = user.username;
-      formData.avatar = user.avatar === defaultAvatar ? '' : user.avatar;
+      formData.email = user.email;
+      formData.avatar = user.avatar;
     }
-  } catch (e) {
-    console.warn('Could not load additional backend profile details:', e.message);
-    // Don't set a global error here, as basic info from Keycloak is still shown
+
+    // Fetch event count
+    await fetchEventCount();
+  } catch (error) {
+    console.error('Error initializing profile:', error);
+    error.value = 'Failed to load profile data. Please try again.';
   }
 }
 
-
-// Fetch event count
+// Fetch event count from your backend
 async function fetchEventCount() {
   if (!isAuthenticated.value) return;
+
   loadingEventCount.value = true;
   try {
-    // Ensure your backend API '/api/internal/eventbus/userservice/event-count'
-    // is secured and uses the Keycloak token to get the count for the logged-in user.
-    const { data } = await axios.get('/api/internal/eventbus/userservice/event-count');
-    eventCount.value = data.count ?? 0;
-  } catch (e) {
-    console.error('Error fetching event count:', e);
-    eventCount.value = 'N/A'; // Indicate error
+    // Replace with your actual API endpoint
+    const response = await axios.get('/api/events/count', {
+      headers: {
+        Authorization: `Bearer ${keycloak.token}`
+      }
+    });
+    eventCount.value = response.data.count;
+  } catch (error) {
+    console.error('Error fetching event count:', error);
   } finally {
     loadingEventCount.value = false;
   }

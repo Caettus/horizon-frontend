@@ -6,7 +6,13 @@
         <!-- Logo/Titel met een klikbare link naar home -->
         <v-col cols="auto">
           <v-btn text @click="goToHome">
-            <v-toolbar-title>Horizon</v-toolbar-title>
+            <v-img
+              :src="logo"
+              alt="Horizon Logo"
+              max-width="150"
+              max-height="40"
+              contain
+            />
           </v-btn>
         </v-col>
 
@@ -61,14 +67,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import keycloak from '../keycloak'
+import logo from '@/assets/logo.png'
 
 const router = useRouter()
 const drawer = ref(false)
-const isAuthenticated = ref(false)
-
+const isAuthenticated = computed(() => keycloak && keycloak.authenticated)
 
 function goToHome() {
   router.push('/')
