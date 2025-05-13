@@ -2,25 +2,56 @@
   <v-container class="py-12">
     <v-row justify="center">
       <v-col cols="12" md="8" lg="7">
-        <AuthenticatedProfile
-          v-if="authStore.isLoggedIn && profileStore.profileData"
-          :user="profileStore.profileData"
-          @edit-profile="openEditDialog"
-        />
+        <!-- 1) Niet ingelogd -->
         <GuestProfile
-          v-else-if="!authStore.isLoggedIn"
+          v-if="!authStore.isLoggedIn"
           @login="handleLogin"
           @register="handleRegister"
         />
-        <!-- Loading state -->
-        <v-skeleton-loader
-          v-else
-          type="card-avatar, article, actions"
-        />
+
+        <!-- 2) Ingelogd -->
+        <template v-else>
+          <!-- A) Laden van backend profiel (via profileStore) -->
+          <v-skeleton-loader
+            v-if="profileStore.loading"
+            type="card-avatar, article, actions"
+          />
+          <!-- B) Laden voltooid: Toon AuthenticatedProfile of "Maak Profiel Aan" bericht -->
+          <template v-else>
+            <!--
+              Toon AuthenticatedProfile als:
+              - Er een backend profiel is (profileStore.hasProfile)
+              OF
+              - Er een fout was bij het ophalen van het backend profiel (profileStore.error).
+              AuthenticatedProfile zal Keycloak data tonen en de status van backend data (geladen, error, of leeg).
+            -->
+            <AuthenticatedProfile
+              v-if="profileStore.hasProfile || profileStore.error"
+              :user="profileStore.profileData"
+              @edit-profile="openEditDialog"
+            />
+            <!--
+              Toon "Maak Profiel Aan" als:
+              - Ingelogd, niet aan het laden, geen error, EN geen backend profiel.
+            -->
+            <div v-else>
+              <v-card class="pa-4 text-center">
+                <v-card-title>Welcome!</v-card-title>
+                <v-card-text>
+                  Your profile isn't set up yet.
+                  <br>
+                  <v-btn color="primary" @click="openEditDialog" class="mt-4">Create Profile</v-btn>
+                </v-card-text>
+              </v-card>
+            </div>
+          </template>
+        </template>
       </v-col>
     </v-row>
 
-    <!-- Edit Dialog managed by this parent component -->
+    <!-- Edit Dialog blijft beschikbaar zodra je ingelogd bent -->
+    <!-- De 'user' prop hier kan nog steeds null zijn als profileStore.profileData null is. -->
+    <!-- EditProfileDialog.vue moet hier mogelijk ook robuuster mee omgaan. -->
     <EditProfileDialog
       v-if="authStore.isLoggedIn"
       v-model="editDialogVisible"
@@ -42,10 +73,8 @@ import { useProfileStore } from '@/stores/profile';
 const authStore = useAuthStore();
 const profileStore = useProfileStore();
 
-// --- State ---
 const editDialogVisible = ref(false);
 
-// --- Methods ---
 function openEditDialog() {
   editDialogVisible.value = true;
 }
@@ -79,17 +108,13 @@ async function handleRegister() {
   }
 }
 
-// --- Lifecycle Hooks ---
+// Bij mount én bij inloggen: profiel binnenhalen
 onMounted(async () => {
-  // Update auth state
   authStore.updateAuthState();
-
-  // If authenticated, fetch profile data
   if (authStore.isLoggedIn) {
     await profileStore.fetchProfile();
   }
 });
-
 
 watch(
   () => authStore.isLoggedIn,
@@ -114,7 +139,6 @@ watch(
 .white--text {
   color: #FFFFFF !important;
 }
-
 .v-card-title.primary {
   background-color: #1976D2 !important;
 }

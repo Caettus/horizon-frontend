@@ -4,38 +4,29 @@ import axios from 'axios';
 
 export const useProfileStore = defineStore('profile', {
   state: () => ({
+    // profile holds backend data or null
     profile: null,
     loading: false,
-    error: null,
+    error: false,
   }),
-
   getters: {
-    hasProfile: (state) => !!state.profile,
+    // computed flags based on profile state
+    hasProfile: (state) => state.profile !== null,
     profileData: (state) => state.profile,
   },
-
   actions: {
     async fetchProfile() {
-      const authStore = useAuthStore();
-      if (!authStore.isLoggedIn) {
-        this.profile = null;
-        return;
-      }
-
       this.loading = true;
-      this.error = null;
-
+      this.error = false;
+      // reset stored profile before fetching
+      this.profile = null;
       try {
-        const response = await axios.get('/api/profile', {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-          },
-        });
+        const response = await axios.get('/api/profile');
+        // assign to state.profile, not to getters
         this.profile = response.data;
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        this.error = error.message;
-        this.profile = null;
+      } catch (e) {
+        this.error = true;
+        console.warn('Kon profiel niet laden (backend):', e);
       } finally {
         this.loading = false;
       }
@@ -48,8 +39,7 @@ export const useProfileStore = defineStore('profile', {
       }
 
       this.loading = true;
-      this.error = null;
-
+      this.error = false;
       try {
         const response = await axios.put('/api/profile', profileData, {
           headers: {
@@ -72,13 +62,12 @@ export const useProfileStore = defineStore('profile', {
       if (!authStore.isLoggedIn) {
         throw new Error('Must be logged in to RSVP');
       }
-
       try {
-        const response = await axios.post(`/api/events/${eventId}/rsvp`, {}, {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-          },
-        });
+        const response = await axios.post(
+          `/api/events/${eventId}/rsvp`,
+          {},
+          { headers: { Authorization: `Bearer ${authStore.token}` } }
+        );
         return response.data;
       } catch (error) {
         console.error('Error RSVPing to event:', error);
