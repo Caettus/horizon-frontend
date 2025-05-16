@@ -63,7 +63,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import apiClient from '@/services/apiClient'
 import EventCard from '@/components/EventCard.vue'
 
 const route = useRoute()
@@ -74,7 +74,8 @@ const categories = ref(['Online', 'Offline', 'Netwerken', 'Workshop'])
 
 async function loadEvents() {
   try {
-    const { data } = await axios.get('/api/events')
+    //apiClientChange
+    const { data } = await apiClient.get('/events')
     events.value = data
   } catch (e) {
     console.error('Kon events niet laden:', e)

@@ -76,7 +76,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import apiClient from '@/services/apiClient'
 import router from '@/router'
 
 const emit = defineEmits(['created'])
@@ -126,7 +126,7 @@ async function onSubmit () {
       startDate: event.value.startDate && new Date(event.value.startDate).toISOString(),
       endDate: event.value.endDate && new Date(event.value.endDate).toISOString(),
     }
-    await axios.post('/api/events', payload)
+    await apiClient.post('/events', payload)
     emit('created')
     router.push({ name: 'Events' })
   }

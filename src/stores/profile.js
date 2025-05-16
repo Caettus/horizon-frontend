@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth';
-import axios from 'axios';
+//import axios from 'axios';
+import apiClient from '@/services/apiClient';
+//apiClientChange
 
 export const useProfileStore = defineStore('profile', {
   state: () => ({
@@ -18,11 +20,10 @@ export const useProfileStore = defineStore('profile', {
     async fetchProfile() {
       this.loading = true;
       this.error = false;
-      // reset stored profile before fetching
       this.profile = null;
       try {
-        const response = await axios.get('/api/profile');
-        // assign to state.profile, not to getters
+        //apiClientChange
+        const response = await apiClient.get('/api/profile');
         this.profile = response.data;
       } catch (e) {
         this.error = true;
@@ -41,7 +42,8 @@ export const useProfileStore = defineStore('profile', {
       this.loading = true;
       this.error = false;
       try {
-        const response = await axios.put('/api/profile', profileData, {
+        //apiClientChange
+        const response = await apiClient.put('/profile', profileData, {
           headers: {
             Authorization: `Bearer ${authStore.token}`,
           },
@@ -63,7 +65,8 @@ export const useProfileStore = defineStore('profile', {
         throw new Error('Must be logged in to RSVP');
       }
       try {
-        const response = await axios.post(
+        //apiClientChange
+        const response = await apiClient.post(
           `/api/events/${eventId}/rsvp`,
           {},
           { headers: { Authorization: `Bearer ${authStore.token}` } }
