@@ -47,7 +47,7 @@
         sm="6"
         md="4"
       >
-        <EventCard :event="event" />
+        <EventCard :event="event" @click="showEventDetails(event)" />
       </v-col>
 
       <!-- Als geen resultaten -->
@@ -57,6 +57,13 @@
         </v-alert>
       </v-col>
     </v-row>
+
+    <!-- Event Details Modal -->
+    <EventDetailsModal
+      :model-value="isModalVisible"
+      :event="selectedEvent"
+      @update:model-value="isModalVisible = false"
+    />
   </v-container>
 </template>
 
@@ -65,10 +72,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import apiClient from '@/services/apiClient'
 import EventCard from '@/components/EventCard.vue'
+import EventDetailsModal from '@/components/EventDetailsModal.vue'
 
 const route = useRoute()
 
 const events = ref([])
+const selectedEvent = ref(null)
+const isModalVisible = ref(false)
 const filters = ref({ search: '', category: [] })
 const categories = ref(['Online', 'Offline', 'Netwerken', 'Workshop'])
 
@@ -84,6 +94,11 @@ async function loadEvents() {
 
 function applyFilters() {
   // trigger computed
+}
+
+function showEventDetails(event) {
+  selectedEvent.value = event
+  isModalVisible.value = true
 }
 
 const filtered = computed(() => {
