@@ -2,7 +2,7 @@
 import Keycloak from 'keycloak-js';
 
 const keycloak = new Keycloak({
-  url: 'http://localhost:8083/',
+  url: 'http://127.0.0.1:56243',
   realm: 'horizon-realm',
   clientId: 'horizon-frontend',
 });
