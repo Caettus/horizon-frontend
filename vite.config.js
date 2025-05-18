@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:52265',
+        target: 'http://api.horizon.local',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
