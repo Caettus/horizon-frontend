@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service # De naam die je Ingress gebruikt om naar deze service te verwijzen
+  labels:
+    app: horizon-frontend # Label voor deze service
+spec:
+  type: ClusterIP # Maakt de service alleen intern in het cluster bereikbaar
+  selector:
+    app: horizon-frontend # Routeert verkeer naar pods met dit label (moet matchen met de pod labels in je Deployment)
+  ports:
+    - protocol: TCP
+      port: 80 # De poort waarop deze service luistert binnen het cluster
+      targetPort: 80 # De poort op de pods waar het verkeer naartoe moet (containerPort uit je Deployment)

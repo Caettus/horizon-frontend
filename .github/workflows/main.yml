@@ -44,6 +44,7 @@ jobs:
           file: ./Dockerfile # Expliciet pad naar Dockerfile
           push: ${{ github.event_name != 'pull_request' }} # Alleen pushen als het geen pull request is (dus bij merge naar main)
           tags: ${{ steps.meta.outputs.tags }} # Gebruik de tags gegenereerd door metadata-action (bijv. latest, git sha)
-          labels: ${{ steps.meta.outputs.labels }} # Voeg labels toe aan de image
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha # Gebruik GitHub Actions cache voor Docker layers
           cache-to: type=gha,mode=max

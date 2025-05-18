@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: horizon-frontend-deployment
+  labels:
+    app: horizon-frontend # Label voor deze deployment
+spec:
+  replicas: 1 # Begin met één replica, je kunt dit later opschalen
+  selector:
+    matchLabels:
+      app: horizon-frontend # Selecteert pods met dit label
+  template: # Dit is de blauwdruk voor de pods
+    metadata:
+      labels:
+        app: horizon-frontend # Pods krijgen dit label
+    spec:
+      containers:
+        - name: horizon-frontend-container
+          image: ghcr.io/caettus/horizon-frontend:master # BELANGRIJK: Pas dit aan!
+          ports:
+            - containerPort: 80 # De poort waarop Nginx in je container luistert (zie je Dockerfile EXPOSE 80)
+          imagePullPolicy: Always # Zorgt ervoor dat altijd de laatste versie van de 'latest' tag wordt geprobeerd te pullen
