@@ -4,9 +4,9 @@ name: Build and Push Frontend Image
 # en bij elke pull request die naar de main branch target
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build-and-push:
