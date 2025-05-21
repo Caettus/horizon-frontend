@@ -23,7 +23,7 @@ export const useProfileStore = defineStore('profile', {
       this.profile = null;
       try {
         //apiClientChange
-        const response = await apiClient.get('/api/profile');
+        const response = await apiClient.get('/profile');
         this.profile = response.data;
       } catch (e) {
         this.error = true;

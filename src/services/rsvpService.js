@@ -18,7 +18,7 @@ const RsvpService = {
    * @returns {Promise<object>} The list of RSVPs.
    */
   getRsvpsByEventId(eventId) {
-    return apiClient.get(`/v1/rsvps/event/${eventId}`);
+    return apiClient.get(`/api/rsvps/event/${eventId}`);
   },
 };
 

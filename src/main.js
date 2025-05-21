@@ -57,7 +57,6 @@ initKeycloak()
     authStore.updateAuthState(); // Sync store with initial KC state
     console.log('Initial auth state synchronized with Pinia store.');
 
-    // User synchronization logic (Step 5)
     if (authStore.isLoggedIn && authStore.user) {
       const syncAttempted = sessionStorage.getItem('userSyncAttempted');
       if (!syncAttempted) {

@@ -26,23 +26,19 @@ keycloak.onTokenExpired = () => {
 
 export const initKeycloak = () =>
   keycloak.init({
-    onLoad: 'check-sso', // This handles the initial load and redirects
+    onLoad: 'check-sso',
     silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-    checkLoginIframe: false, // Often causes issues, keep false unless specifically needed
+    checkLoginIframe: false,
     promiseType: 'native',
     pkceMethod: 'S256',
-    // You might not need flow, responseMode, redirectUri if using standard flow defaults with check-sso
-    // flow: 'standard',
-    // responseMode: 'query',
-    // redirectUri: window.location.origin, // onLoad:'check-sso' usually handles this
   })
     .then(authenticated => {
       console.log(`Keycloak init request finished. Authenticated status: ${authenticated}`);
-      return authenticated; // Pass status along
+      return authenticated;
     })
     .catch(error => {
       console.error("Keycloak init failed:", error);
-      return false; // Indicate failure
+      return false;
     });
 
 export default keycloak;
