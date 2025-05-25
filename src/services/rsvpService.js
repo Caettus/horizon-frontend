@@ -9,7 +9,7 @@ const RsvpService = {
    * @returns {Promise<object>} The response from the API.
    */
   createRsvp(payload) {
-    return apiClient.post('/rsvps', payload);
+    return apiClient.post('/rsvp', payload);
   },
 
   /**
@@ -18,7 +18,7 @@ const RsvpService = {
    * @returns {Promise<object>} The list of RSVPs.
    */
   getRsvpsByEventId(eventId) {
-    return apiClient.get(`/api/rsvps/event/${eventId}`);
+    return apiClient.get(`/rsvp/event/${eventId}`);
   },
 };
 

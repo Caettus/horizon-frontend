@@ -23,7 +23,7 @@ export const useProfileStore = defineStore('profile', {
       this.profile = null;
       try {
         //apiClientChange
-        const response = await apiClient.get('/profile');
+        const response = await apiClient.get('/users/profile');
         this.profile = response.data;
       } catch (e) {
         this.error = true;
@@ -43,7 +43,7 @@ export const useProfileStore = defineStore('profile', {
       this.error = false;
       try {
         //apiClientChange
-        const response = await apiClient.put('/profile', profileData, {
+        const response = await apiClient.put('/users/profile', profileData, {
           headers: {
             Authorization: `Bearer ${authStore.token}`,
           },

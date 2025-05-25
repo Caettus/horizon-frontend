@@ -63,7 +63,7 @@ initKeycloak()
         const { id: keycloakId, username, email } = authStore.user;
         const syncPayload = { keycloakId, username, email };
 
-        apiClient.post('/internal/users/synchronize', syncPayload)
+        apiClient.post('/users/internal/synchronize', syncPayload)
           .then(response => {
             console.log('User synchronization successful:', response.data);
             sessionStorage.setItem('userSyncAttempted', 'true');
