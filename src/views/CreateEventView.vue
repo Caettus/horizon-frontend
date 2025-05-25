@@ -13,6 +13,6 @@ const router = useRouter()
 
 function handleCreated () {
   // Na succesvol opslaan: terug naar event‑overzicht
-  router.push({ name: 'Events' })
+  router.push({ name: 'events' })
 }
 </script>

@@ -78,6 +78,7 @@
 import { ref } from 'vue'
 import apiClient from '@/services/apiClient'
 import router from '@/router'
+import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits(['created'])
 
@@ -100,7 +101,7 @@ const event = ref({
   category: null,
   tags: [],
   isPrivate: false,
-  organizerId: null, // vul vanuit auth‑provider indien beschikbaar
+  organizerId: null,
   imageUrl: '',
 })
 
@@ -119,16 +120,35 @@ const r = {
 async function onSubmit () {
   if (!valid.value) return
   loading.value = true
+
+  const authStore = useAuthStore()
+  console.log('AuthStore isLoggedIn:', authStore.isLoggedIn);
+  console.log('AuthStore user:', authStore.user);
+  if (authStore.user) {
+    console.log('AuthStore user ID:', authStore.user.id);
+  }
+
+  if (authStore.isLoggedIn && authStore.user && authStore.user.id) {
+    event.value.organizerId = authStore.user.id
+    console.log('Set event.organizerId to:', event.value.organizerId);
+  } else {
+    console.error('User not logged in or user ID not available. Cannot set organizerId.')
+    errorMsg.value = 'You must be logged in to create an event.'
+    loading.value = false
+    console.log('event.organizerId remains:', event.value.organizerId); // Log in case of failure too
+    return
+  }
+
   try {
-    // Backend verwacht ISO‑strings, converteer LocalDate -> string
     const payload = {
       ...event.value,
       startDate: event.value.startDate && new Date(event.value.startDate).toISOString(),
       endDate: event.value.endDate && new Date(event.value.endDate).toISOString(),
     }
+    console.log('Payload to be sent to /events:', payload); // Log the payload
     await apiClient.post('/events', payload)
     emit('created')
-    router.push({ name: 'Events' })
+    router.push({ name: 'events' })
   }
   catch (err) {
     console.error('Event opslaan mislukt', err)

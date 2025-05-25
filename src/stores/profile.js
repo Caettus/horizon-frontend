@@ -67,7 +67,7 @@ export const useProfileStore = defineStore('profile', {
       try {
         //apiClientChange
         const response = await apiClient.post(
-          `/api/events/${eventId}/rsvp`,
+          `/api/events/${eventId}/rsvps`,
           {},
           { headers: { Authorization: `Bearer ${authStore.token}` } }
         );

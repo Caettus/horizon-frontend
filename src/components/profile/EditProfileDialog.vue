@@ -70,7 +70,8 @@ const props = defineProps({
   modelValue: Boolean, // For v-model binding
   user: {
     type: Object,
-    required: true
+    required: true,
+    default: () => ({}) // Add default empty object
   }
 });
 
@@ -132,7 +133,7 @@ async function submitProfile() {
     };
 
     // Replace '/api/profile/me' with your actual update endpoint
-    const response = await axios.put(`/api/profile/me`, payload, {
+    await axios.put(`/api/users/profile`, payload, {
         headers: { Authorization: `Bearer ${keycloak.token}` }
     });
 

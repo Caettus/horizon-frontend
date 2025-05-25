@@ -9,7 +9,6 @@ import * as baseComponents from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import '@mdi/font/css/materialdesignicons.css';
 import { useAuthStore } from './stores/auth';
-import apiClient from './services/apiClient';
 
 import { VSkeletonLoader } from 'vuetify/components';
 const components = {
@@ -56,26 +55,6 @@ initKeycloak()
     const authStore = useAuthStore(); // Get store instance *after* Pinia is used
     authStore.updateAuthState(); // Sync store with initial KC state
     console.log('Initial auth state synchronized with Pinia store.');
-
-    if (authStore.isLoggedIn && authStore.user) {
-      const syncAttempted = sessionStorage.getItem('userSyncAttempted');
-      if (!syncAttempted) {
-        const { id: keycloakId, username, email } = authStore.user;
-        const syncPayload = { keycloakId, username, email };
-
-        apiClient.post('/users/internal/synchronize', syncPayload)
-          .then(response => {
-            console.log('User synchronization successful:', response.data);
-            sessionStorage.setItem('userSyncAttempted', 'true');
-          })
-          .catch(error => {
-            console.error('User synchronization failed:', error.response?.data || error.message);
-            // Still set the flag to avoid hammering a failing endpoint,
-            // or implement more sophisticated retry/backoff if needed.
-            sessionStorage.setItem('userSyncAttempted', 'true');
-          });
-      }
-    }
 
     // Ensure the router is ready before mounting
     router.isReady().then(() => {

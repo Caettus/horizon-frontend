@@ -6,10 +6,12 @@ const RsvpService = {
    * @param {object} payload - The RSVP data.
    * @param {string} payload.eventId - The ID of the event.
    * @param {string} payload.userId - The ID of the user (keycloakId).
+   * @param {string} [payload.status='ATTENDING'] - The RSVP status.
    * @returns {Promise<object>} The response from the API.
    */
   createRsvp(payload) {
-    return apiClient.post('/rsvp', payload);
+    const { eventId, userId, status = 'ATTENDING' } = payload;
+    return apiClient.post(`/rsvps?eventId=${eventId}&status=${status}`, { userId });
   },
 
   /**
@@ -18,7 +20,7 @@ const RsvpService = {
    * @returns {Promise<object>} The list of RSVPs.
    */
   getRsvpsByEventId(eventId) {
-    return apiClient.get(`/rsvp/event/${eventId}`);
+    return apiClient.get(`/rsvps/event/${eventId}`);
   },
 };
 

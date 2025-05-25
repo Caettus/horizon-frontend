@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import keycloak from '../keycloak';
+import apiClient from '@/services/apiClient';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -25,10 +26,25 @@ export const useAuthStore = defineStore('auth', {
           username: keycloak.tokenParsed.preferred_username || keycloak.tokenParsed.name,
           email: keycloak.tokenParsed.email,
         };
+
+        if (this.isAuthenticated && this.user && !sessionStorage.getItem('userSyncAttempted')) {
+          const { id: keycloakId, username, email } = this.user;
+          const syncPayload = { keycloakId, username, email };
+          apiClient.post('/users/internal/synchronize', syncPayload)
+            .then(() => {
+              console.log('User synchronization successful from updateAuthState.');
+              sessionStorage.setItem('userSyncAttempted', 'true');
+            })
+            .catch(syncError => {
+              console.error('User synchronization failed from updateAuthState:', syncError.response?.data || syncError.message);
+              sessionStorage.setItem('userSyncAttempted', 'true');
+            });
+        }
       } else {
         this.token = null;
         this.tokenParsed = null;
         this.user = null;
+        sessionStorage.removeItem('userSyncAttempted');
       }
     },
 
@@ -36,6 +52,23 @@ export const useAuthStore = defineStore('auth', {
       try {
         await keycloak.login();
         this.updateAuthState();
+
+        if (this.isLoggedIn && this.user) {
+          const { id: keycloakId, username, email } = this.user;
+          const syncPayload = { keycloakId, username, email };
+          try {
+            if (!sessionStorage.getItem('userSyncAttempted')) {
+              await apiClient.post('/users/internal/synchronize', syncPayload);
+              console.log('User synchronization successful after login.');
+              sessionStorage.setItem('userSyncAttempted', 'true');
+            }
+          } catch (syncError) {
+            console.error('User synchronization failed after login:', syncError.response?.data || syncError.message);
+            if (!sessionStorage.getItem('userSyncAttempted')) {
+                sessionStorage.setItem('userSyncAttempted', 'true');
+            }
+          }
+        }
       } catch (error) {
         console.error('Login failed:', error);
         throw error;
