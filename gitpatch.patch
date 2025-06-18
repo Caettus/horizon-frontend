@@ -1,0 +1,376 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/src/components/AppFooter.vue b/src/components/AppFooter.vue
+index a459543d6696350133d5678b6924cc3bd3a7886d..a37ac4df4d713cb843ed020f80607c3c21724da3 100644
+--- a/src/components/AppFooter.vue
++++ b/src/components/AppFooter.vue
+@@ -1,12 +1,24 @@
+ <!-- src/components/AppFooter.vue -->
+ <template>
+   <v-footer color="primary" padless>
+     <v-col class="text-center white--text py-4">
+       © 2025 Horizon. Alle rechten voorbehouden.
++      <v-btn text class="ml-4" @click="showPrivacy = true">Privacyreglement</v-btn>
++      <v-btn text class="ml-2" @click="goToSettings">Privacy instellingen</v-btn>
+     </v-col>
++    <PrivacyPolicyDialog v-model="showPrivacy" />
+   </v-footer>
+ </template>
+ 
+ <script setup>
+-// Geen speciale logica op dit moment.
++import { ref } from 'vue';
++import { useRouter } from 'vue-router';
++import PrivacyPolicyDialog from './PrivacyPolicyDialog.vue';
++
++const router = useRouter();
++const showPrivacy = ref(false);
++
++function goToSettings() {
++  router.push('/privacy');
++}
+ </script>
+diff --git a/src/components/PrivacyPolicyDialog.vue b/src/components/PrivacyPolicyDialog.vue
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ac43feab21a7bdccc0d3067e4d28bf783f29ec3
+--- /dev/null
++++ b/src/components/PrivacyPolicyDialog.vue
+@@ -0,0 +1,38 @@
++<template>
++  <v-dialog :model-value="modelValue" @update:model-value="handleUpdate" max-width="600">
++    <v-card>
++      <v-card-title class="text-h6">Privacyreglement</v-card-title>
++      <v-card-text>
++        <p>
++          Wij hechten veel waarde aan uw privacy. Deze mockup beschrijft hoe een
++          echt platform persoonsgegevens zou kunnen verwerken. Denk aan het
++          verzamelen van minimale accountgegevens en het gebruik van cookies voor
++          een betere gebruikservaring. U kunt in het privacy instellingen scherm
++          aangeven welke gegevens u wilt delen.
++        </p>
++      </v-card-text>
++      <v-card-actions>
++        <v-spacer />
++        <v-btn color="primary" text @click="closeDialog">Sluiten</v-btn>
++      </v-card-actions>
++    </v-card>
++  </v-dialog>
++</template>
++
++<script setup>
++import { defineProps, defineEmits } from 'vue';
++
++defineProps({
++  modelValue: { type: Boolean, required: true },
++});
++
++const emit = defineEmits(['update:modelValue']);
++
++function handleUpdate(val) {
++  emit('update:modelValue', val);
++}
++
++function closeDialog() {
++  emit('update:modelValue', false);
++}
++</script>
+diff --git a/src/components/__tests__/HelloWorld.spec.js b/src/components/__tests__/HelloWorld.spec.js
+index 2533202008f7270910420c60a420efaf9b505c90..13d24fec72c2b278257063e43ce6f1f60f44a4d8 100644
+--- a/src/components/__tests__/HelloWorld.spec.js
++++ b/src/components/__tests__/HelloWorld.spec.js
+@@ -1,11 +1,13 @@
+ import { describe, it, expect } from 'vitest'
+ 
+ import { mount } from '@vue/test-utils'
+-import HelloWorld from '../HelloWorld.vue'
++import IconComponent from '../IconComponent.vue'
+ 
+-describe('HelloWorld', () => {
+-  it('renders properly', () => {
+-    const wrapper = mount(HelloWorld, { props: { msg: 'Hello Vitest' } })
+-    expect(wrapper.text()).toContain('Hello Vitest')
++describe('IconComponent', () => {
++  it('renders slot content', () => {
++    const wrapper = mount(IconComponent, {
++      slots: { default: '<i class="test-icon" />' }
++    })
++    expect(wrapper.find('i').exists()).toBe(true)
+   })
+ })
+diff --git a/src/components/__tests__/PrivacyPolicyDialog.spec.js b/src/components/__tests__/PrivacyPolicyDialog.spec.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..adc011a9fc50c0a4a0c7ca028cf8d33d06b274c6
+--- /dev/null
++++ b/src/components/__tests__/PrivacyPolicyDialog.spec.js
+@@ -0,0 +1,12 @@
++import { shallowMount } from '@vue/test-utils';
++import { describe, it, expect } from 'vitest';
++import PrivacyPolicyDialog from '../PrivacyPolicyDialog.vue';
++
++describe('PrivacyPolicyDialog', () => {
++  it('renders dialog content', () => {
++    const wrapper = shallowMount(PrivacyPolicyDialog, {
++      props: { modelValue: true }
++    });
++    expect(wrapper.text()).toContain('Privacyreglement');
++  });
++});
+diff --git a/src/router/index.js b/src/router/index.js
+index c2e41891796789fd9328aecdb43f58fb09c53c08..b4bfaa492d8273a201024be7e19742bee3f82da5 100644
+--- a/src/router/index.js
++++ b/src/router/index.js
+@@ -39,50 +39,58 @@ const routes = [
+     },
+     {
+       path: '/events/create',
+       name: 'CreateEvent',
+       component: () => import('../views/CreateEventView.vue'),
+       meta: {
+         requiresAuth: true,
+       },
+     },
+     {
+       path: '/signup',
+       name: 'signup',
+       component: () => import('../views/RegistrationView.vue'),
+       meta: {
+         requiresAuth: false,
+       },
+     },
+     {
+       path: '/login',
+       name: 'login',
+       component: () => import('../views/LoginView.vue'),
+       meta: {
+         requiresAuth: false,
+       },
+     },
++    {
++      path: '/privacy',
++      name: 'privacy',
++      component: () => import('../views/PrivacySettingsView.vue'),
++      meta: {
++        requiresAuth: false,
++      },
++    },
+ ];
+ 
+ const router = createRouter({
+     history: createWebHistory(import.meta.env.BASE_URL),
+     routes,
+ });
+ 
+ 
+ router.beforeEach(async (to, from, next) => {
+   const authStore = useAuthStore();
+ 
+   await authStore.updateAuthState();
+ 
+   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+     console.log('User not authenticated, redirecting to login for route:', to.fullPath);
+     return keycloak.login({ redirectUri: window.location.origin + to.fullPath });
+   }
+ 
+   if ((to.name === 'login' || to.name === 'signup') && authStore.isLoggedIn) {
+     return next({ name: 'home' });
+   }
+ 
+   next();
+ });
+ 
+diff --git a/src/views/PrivacySettingsView.vue b/src/views/PrivacySettingsView.vue
+new file mode 100644
+index 0000000000000000000000000000000000000000..9c542bd1fc709244ea0469dd1a4812c1a87041cb
+--- /dev/null
++++ b/src/views/PrivacySettingsView.vue
+@@ -0,0 +1,46 @@
++<template>
++  <v-container class="py-10">
++    <v-row justify="center">
++      <v-col cols="12" md="8">
++        <v-card>
++          <v-card-title class="text-h6">Privacy instellingen</v-card-title>
++          <v-card-text>
++            <p>Pas hier aan welke gegevens je wilt delen. Deze opties zijn puur ter illustratie.</p>
++            <v-switch
++              v-model="shareData"
++              label="Sta het delen van anonieme gebruiksdata toe"
++            />
++            <v-switch
++              v-model="receiveEmails"
++              label="Ontvang updates en nieuws per e-mail"
++            />
++            <v-switch
++              v-model="personalizedAds"
++              label="Toon gepersonaliseerde inhoud"
++            />
++          </v-card-text>
++          <v-card-actions>
++            <v-spacer />
++            <v-btn color="primary" @click="saveSettings">Opslaan</v-btn>
++          </v-card-actions>
++        </v-card>
++      </v-col>
++    </v-row>
++  </v-container>
++</template>
++
++<script setup>
++import { ref } from 'vue';
++import { useRouter } from 'vue-router';
++
++const shareData = ref(false);
++const receiveEmails = ref(false);
++const personalizedAds = ref(false);
++
++const router = useRouter();
++
++function saveSettings() {
++  // Functionality not implemented; navigate back to previous page
++  router.back();
++}
++</script>
+diff --git a/src/views/components/JavascriptComponents/Modals.vue b/src/views/components/JavascriptComponents/Modals.vue
+index 2f69a8cbf5f3a540948ed13776b76a969997cad8..aa74e5bf1647df8c6e11b79d7246979c222fff09 100644
+--- a/src/views/components/JavascriptComponents/Modals.vue
++++ b/src/views/components/JavascriptComponents/Modals.vue
+@@ -1,119 +1,128 @@
++<!-- eslint-disable vue/multi-word-component-names -->
+ <template>
+   <!-- Modals -->
+   <div class="row">
+     <div class="col-md-4">
+       <base-button block type="primary" class="mb-3" @click="modals.modal1 = true">
+         Default
+       </base-button>
+-      <modal :show.sync="modals.modal1">
+-        <h6 slot="header" class="modal-title" id="modal-title-default">Type your modal title</h6>
++      <modal v-model:show="modals.modal1">
++        <template v-slot:header>
++<h6  class="modal-title" id="modal-title-default">Type your modal title</h6>
++</template>
+ 
+         <p>
+           Far far away, behind the word mountains, far from the countries Vokalia and Consonantia,
+           there live the blind texts. Separated they live in Bookmarksgrove right at the coast of
+           the Semantics, a large language ocean.
+         </p>
+         <p>
+           A small river named Duden flows by their place and supplies it with the necessary
+           regelialia. It is a paradisematic country, in which roasted parts of sentences fly into
+           your mouth.
+         </p>
+ 
+-        <template slot="footer">
++        <template v-slot:footer>
+           <base-button type="primary">Save changes</base-button>
+           <base-button type="link" class="ml-auto" @click="modals.modal1 = false"
+             >Close
+           </base-button>
+         </template>
+       </modal>
+     </div>
+     <div class="col-md-4">
+       <base-button block type="warning" class="mb-3" @click="modals.modal2 = true">
+         Notification
+       </base-button>
+ 
+       <modal
+-        :show.sync="modals.modal2"
++        v-model:show="modals.modal2"
+         gradient="danger"
+         modal-classes="modal-danger modal-dialog-centered"
+       >
+-        <h6 slot="header" class="modal-title" id="modal-title-notification">
++        <template v-slot:header>
++<h6  class="modal-title" id="modal-title-notification">
+           Your attention is required
+         </h6>
++</template>
+ 
+         <div class="py-3 text-center">
+           <i class="ni ni-bell-55 ni-3x"></i>
+           <h4 class="heading mt-4">You should read this!</h4>
+           <p>
+             A small river named Duden flows by their place and supplies it with the necessary
+             regelialia.
+           </p>
+         </div>
+ 
+-        <template slot="footer">
++        <template v-slot:footer>
+           <base-button type="white">Ok, Got it</base-button>
+           <base-button
+             type="link"
+             text-color="white"
+             class="ml-auto"
+             @click="modals.modal2 = false"
+           >
+             Close
+           </base-button>
+         </template>
+       </modal>
+     </div>
+     <div class="col-md-4">
+       <base-button block type="default" class="mb-3" @click="modals.modal3 = true">
+         Form
+       </base-button>
+ 
+       <modal
+-        :show.sync="modals.modal3"
++        v-model:show="modals.modal3"
+         body-classes="p-0"
+         modal-classes="modal-dialog-centered modal-sm"
+       >
+         <card
+           type="secondary"
+           shadow
+           header-classes="bg-white pb-5"
+           body-classes="px-lg-5 py-lg-5"
+           class="border-0"
+         >
+           <template>
+             <div class="text-muted text-center mb-3">
+               <small>Sign in with</small>
+             </div>
+             <div class="btn-wrapper text-center">
+               <base-button type="neutral">
+-                <img slot="icon" src="img/icons/common/github.svg" />
++                <template v-slot:icon>
++<img  src="img/icons/common/github.svg" />
++</template>
+                 Github
+               </base-button>
+ 
+               <base-button type="neutral">
+-                <img slot="icon" src="img/icons/common/google.svg" />
++                <template v-slot:icon>
++<img  src="img/icons/common/google.svg" />
++</template>
+                 Google
+               </base-button>
+             </div>
+           </template>
+           <template>
+             <div class="text-center text-muted mb-4">
+               <small>Or sign in with credentials</small>
+             </div>
+             <form role="form">
+               <base-input
+                 alternative
+                 class="mb-3"
+                 placeholder="Email"
+                 addon-left-icon="ni ni-email-83"
+               >
+               </base-input>
+               <base-input
+                 alternative
+                 type="password"
+                 placeholder="Password"
+                 addon-left-icon="ni ni-lock-circle-open"
+               >
+               </base-input>
+               <base-checkbox> Remember me </base-checkbox>
+               <div class="text-center">
+ 
+EOF
+)

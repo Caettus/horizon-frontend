@@ -5,8 +5,10 @@
       <base-button block type="primary" class="mb-3" @click="modals.modal1 = true">
         Default
       </base-button>
-      <modal :show.sync="modals.modal1">
-        <h6 slot="header" class="modal-title" id="modal-title-default">Type your modal title</h6>
+      <modal v-model:show="modals.modal1">
+        <template v-slot:header>
+          <h6  class="modal-title" id="modal-title-default">Type your modal title</h6>
+        </template>
 
         <p>
           Far far away, behind the word mountains, far from the countries Vokalia and Consonantia,
@@ -19,7 +21,7 @@
           your mouth.
         </p>
 
-        <template slot="footer">
+        <template v-slot:footer>
           <base-button type="primary">Save changes</base-button>
           <base-button type="link" class="ml-auto" @click="modals.modal1 = false"
             >Close
@@ -33,13 +35,15 @@
       </base-button>
 
       <modal
-        :show.sync="modals.modal2"
+        v-model:show="modals.modal2"
         gradient="danger"
         modal-classes="modal-danger modal-dialog-centered"
       >
-        <h6 slot="header" class="modal-title" id="modal-title-notification">
-          Your attention is required
-        </h6>
+        <template v-slot:header>
+          <h6  class="modal-title" id="modal-title-notification">
+           Your attention is required
+         </h6>
+        </template>
 
         <div class="py-3 text-center">
           <i class="ni ni-bell-55 ni-3x"></i>
@@ -50,7 +54,7 @@
           </p>
         </div>
 
-        <template slot="footer">
+        <template v-slot:footer>
           <base-button type="white">Ok, Got it</base-button>
           <base-button
             type="link"
@@ -69,7 +73,7 @@
       </base-button>
 
       <modal
-        :show.sync="modals.modal3"
+        v-model:show="modals.modal3"
         body-classes="p-0"
         modal-classes="modal-dialog-centered modal-sm"
       >
@@ -86,13 +90,16 @@
             </div>
             <div class="btn-wrapper text-center">
               <base-button type="neutral">
-                <img slot="icon" src="img/icons/common/github.svg" />
+                <template v-slot:icon>
+                  <img  src="img/icons/common/github.svg" />
+                </template>
                 Github
               </base-button>
 
               <base-button type="neutral">
-                <img slot="icon" src="img/icons/common/google.svg" />
-                Google
+                <template v-slot:icon>
+                  <img  src="img/icons/common/google.svg" />
+                </template>
               </base-button>
             </div>
           </template>

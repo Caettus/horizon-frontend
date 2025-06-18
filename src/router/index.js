@@ -61,6 +61,14 @@ const routes = [
         requiresAuth: false,
       },
     },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('../views/PrivacySettingsView.vue'),
+      meta: {
+        requiresAuth: false,
+      },
+    },
 ];
 
 const router = createRouter({
