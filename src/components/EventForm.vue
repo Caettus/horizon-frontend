@@ -36,18 +36,36 @@
       </v-col>
 
       <v-col cols="12">
-        <v-row dense>
+        <v-label class="text-subtitle-1">Eventbannerafbeelding</v-label>
+      </v-col>
+
+      <v-col cols="12">
+        <v-text-field
+          v-model="event.imageUrl"
+          label="Afbeeldings-URL"
+          placeholder="https://voorbeeld.com/afbeelding.png"
+          clearable
+          hint="Plak een URL van een afbeelding voor de banner van je evenement."
+          persistent-hint
+        />
+      </v-col>
+
+      <v-col cols="12">
+        <div class="text-caption">Of kies een van onze suggesties:</div>
+        <v-row dense class="mt-2">
           <v-col
             v-for="img in imageOptions"
             :key="img.url"
             cols="4"
+            sm="2"
             class="pa-1"
           >
             <v-img
               :src="img.url"
-              height="100"
+              height="80"
+              cover
               class="rounded-lg cursor-pointer"
-              :class="{ 'border border-primary': event.imageUrl === img.url }"
+              :class="{ 'border-lg border-primary': event.imageUrl === img.url }"
               @click="event.imageUrl = img.url"
             >
               <template #placeholder>
@@ -56,10 +74,6 @@
             </v-img>
           </v-col>
         </v-row>
-      </v-col>
-
-      <v-col cols="12">
-        <v-text-field v-model="event.imageUrl" label="Of plak een afbeeldings-URL" clearable />
       </v-col>
 
       <v-col cols="12" md="8">

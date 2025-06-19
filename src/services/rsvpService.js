@@ -22,6 +22,15 @@ const RsvpService = {
   getRsvpsByEventId(eventId) {
     return apiClient.get(`/rsvps/event/${eventId}`);
   },
+
+  /**
+   * Fetches all RSVPs for a specific user.
+   * @param {string} userId - The ID of the user.
+   * @returns {Promise<object>} The list of RSVPs.
+   */
+  getRsvpsByUserId(userId) {
+    return apiClient.get(`/rsvps/user/${userId}`);
+  },
 };
 
 export default RsvpService;

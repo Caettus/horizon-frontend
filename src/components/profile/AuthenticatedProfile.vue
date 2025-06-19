@@ -44,12 +44,47 @@
       </v-btn>
     </v-card-actions>
   </v-card>
+
+  <!-- My RSVPs Section -->
+  <v-card v-if="!isLoading && profileStore.profileData" elevation="6" class="profile-card mx-auto mt-6" max-width="600">
+    <v-card-title class="text-h6 font-weight-bold">My Upcoming Events</v-card-title>
+    <v-divider />
+    <v-card-text>
+      <div v-if="isLoadingRsvps" class="text-center pa-4">
+        <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        <p class="mt-2">Loading your events...</p>
+      </div>
+      <div v-else-if="rsvpsError" class="text-error pa-2">
+        <p>Could not load your events: {{ rsvpsError }}</p>
+      </div>
+      <div v-else-if="rsvpedEvents.length > 0">
+        <v-row dense>
+          <v-col v-for="event in rsvpedEvents" :key="event.id" cols="12" sm="6">
+            <EventCard :event="event" @click="showEventDetails(event)" class="ma-2"/>
+          </v-col>
+        </v-row>
+      </div>
+      <div v-else class="text-center pa-4">
+        <p>You have not RSVP'd to any events yet.</p>
+      </div>
+    </v-card-text>
+  </v-card>
+
+  <EventDetailsModal
+    :model-value="isModalVisible"
+    :event="selectedEvent"
+    @update:model-value="isModalVisible = false"
+  />
 </template>
 
 <script setup>
 import { ref, onMounted, inject, watch } from 'vue';
 import { useProfileStore } from '@/stores/profile';
 import { useAuthStore } from '@/stores/auth';
+import RsvpService from '@/services/rsvpService';
+import apiClient from '@/services/apiClient';
+import EventCard from '@/components/EventCard.vue';
+import EventDetailsModal from '@/components/EventDetailsModal.vue';
 
 defineProps({
   user: {
@@ -67,6 +102,11 @@ const profileStore = useProfileStore();
 const kcProfile = ref(null);
 const isLoading = ref(true);
 const initialLoadAttempted = ref(false);
+const rsvpedEvents = ref([]);
+const isLoadingRsvps = ref(false);
+const rsvpsError = ref(null);
+const selectedEvent = ref(null);
+const isModalVisible = ref(false);
 
 // --- Defaults ---
 const defaultAvatar = 'https://cdn.vuetifyjs.com/images/john.jpg';
@@ -78,6 +118,46 @@ function navigateToKeycloakAccount() {
     keycloak.accountManagement().catch(err => console.error("Failed to navigate to account management:", err));
   } else {
     console.error("Account management function is not available.");
+  }
+}
+
+function showEventDetails(event) {
+  selectedEvent.value = event;
+  isModalVisible.value = true;
+}
+
+async function fetchRsvpedEvents() {
+  if (!authStore.user?.id) {
+    rsvpsError.value = 'User not found.';
+    return;
+  }
+
+  isLoadingRsvps.value = true;
+  rsvpsError.value = null;
+
+  try {
+    const rsvpResponse = await RsvpService.getRsvpsByUserId(authStore.user.id);
+    const rsvps = rsvpResponse.data;
+
+    if (!rsvps || rsvps.length === 0) {
+      rsvpedEvents.value = [];
+      return;
+    }
+
+    const eventIds = rsvps.map(rsvp => rsvp.eventId).filter(id => id);
+    if (eventIds.length === 0) {
+      rsvpedEvents.value = [];
+      return;
+    }
+
+    const eventsResponse = await apiClient.get(`/events/batch?ids=${eventIds.join(',')}`);
+    rsvpedEvents.value = eventsResponse.data;
+
+  } catch (err) {
+    console.error('Failed to fetch RSVP\'d events:', err);
+    rsvpsError.value = err.response?.data?.message || err.message || 'An unknown error occurred.';
+  } finally {
+    isLoadingRsvps.value = false;
   }
 }
 
@@ -107,6 +187,8 @@ onMounted(async () => {
   } else if (profileStore.hasProfile) {
     console.log('AuthenticatedProfile: Profile data already in store or being loaded.');
   }
+
+  fetchRsvpedEvents();
 
   await Promise.allSettled([profilePromise]);
 

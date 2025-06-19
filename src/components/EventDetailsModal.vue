@@ -67,13 +67,13 @@
         <v-spacer />
         <v-btn text color="primary" @click="handleClose">Sluiten</v-btn>
         <v-btn
-          v-if="authStore.isLoggedIn && event && event.id"
+          v-if="event && event.id"
           color="success"
-          @click="handleRsvp"
+          @click="onRsvpClick"
           :loading="isRsvping"
-          :disabled="isRsvping || isUserRsvped"
+          :disabled="isRsvping || (authStore.isLoggedIn && isUserRsvped)"
         >
-          {{ isUserRsvped ? "You've RSVP'd" : 'RSVP' }}
+          {{ authStore.isLoggedIn && isUserRsvped ? "You've RSVP'd" : 'RSVP' }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -86,10 +86,28 @@
       <v-btn text @click="snackbar = false">Close</v-btn>
     </template>
   </v-snackbar>
+
+  <!-- Login Prompt Dialog -->
+  <v-dialog v-model="showLoginPrompt" max-width="400" persistent>
+    <v-card>
+      <v-card-title class="text-h5">Login Required</v-card-title>
+      <v-card-text>
+        You need to be logged in to RSVP for this event. Please log in or create an account to
+        continue.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="showLoginPrompt = false">Cancel</v-btn>
+        <v-btn color="primary" text @click="goToLogin">Login</v-btn>
+        <v-btn color="secondary" text @click="goToRegister">Register</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
 import { defineProps, defineEmits, ref, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/services/apiClient'
 import RsvpService from '@/services/rsvpService'
@@ -101,9 +119,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const router = useRouter()
 const authStore = useAuthStore()
 const isRsvping = ref(false)
 const rsvpError = ref(null)
+const showLoginPrompt = ref(false)
 
 const snackbar = ref(false)
 const snackbarText = ref('')
@@ -174,6 +194,26 @@ async function handleRsvp() {
   } finally {
     isRsvping.value = false
   }
+}
+
+function onRsvpClick() {
+  if (authStore.isLoggedIn) {
+    handleRsvp()
+  } else {
+    showLoginPrompt.value = true
+  }
+}
+
+function goToLogin() {
+  showLoginPrompt.value = false
+  handleClose() // Close the main modal
+  router.push('/login')
+}
+
+function goToRegister() {
+  showLoginPrompt.value = false
+  handleClose() // Close the main modal
+  router.push('/signup')
 }
 
 // Fetch RSVP'd users
