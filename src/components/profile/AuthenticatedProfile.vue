@@ -57,12 +57,15 @@
       <div v-else-if="rsvpsError" class="text-error pa-2">
         <p>Could not load your events: {{ rsvpsError }}</p>
       </div>
-      <div v-else-if="rsvpedEvents.length > 0">
+      <div v-else-if="upcomingRsvpedEvents.length > 0">
         <v-row dense>
-          <v-col v-for="event in rsvpedEvents" :key="event.id" cols="12" sm="6">
+          <v-col v-for="event in upcomingRsvpedEvents" :key="event.id" cols="12" sm="6">
             <EventCard :event="event" @click="showEventDetails(event)" class="ma-2"/>
           </v-col>
         </v-row>
+      </div>
+      <div v-else-if="rsvpedEvents.length > 0 && upcomingRsvpedEvents.length === 0" class="text-center pa-4">
+        <p>You have no upcoming events. All your RSVP'd events are in the past.</p>
       </div>
       <div v-else class="text-center pa-4">
         <p>You have not RSVP'd to any events yet.</p>
@@ -78,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, watch } from 'vue';
+import { ref, onMounted, inject, watch, computed } from 'vue';
 import { useProfileStore } from '@/stores/profile';
 import { useAuthStore } from '@/stores/auth';
 import RsvpService from '@/services/rsvpService';
@@ -107,6 +110,17 @@ const isLoadingRsvps = ref(false);
 const rsvpsError = ref(null);
 const selectedEvent = ref(null);
 const isModalVisible = ref(false);
+
+const upcomingRsvpedEvents = computed(() => {
+  const now = new Date();
+  return rsvpedEvents.value
+    .filter(event => {
+      const eventDate = new Date(event.date);
+      // Make sure date is valid before comparison
+      return !isNaN(eventDate) && eventDate >= now;
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+});
 
 // --- Defaults ---
 const defaultAvatar = 'https://cdn.vuetifyjs.com/images/john.jpg';

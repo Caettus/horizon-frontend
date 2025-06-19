@@ -27,6 +27,7 @@
           <v-chip
             v-for="cat in categories"
             :key="cat"
+            filter
             outlined
             class="ma-1"
           >
@@ -156,15 +157,15 @@ const hasActiveFilters = computed(() => {
 })
 
 const filtered = computed(() => {
-  return events.value.filter((e) => {
-    const searchLower = (filters.value.search || '').toLowerCase()
-    const matchesSearch = e.title
-      .toLowerCase()
-      .includes(searchLower)
-    const matchesCategory =
-      filters.value.category.length === 0 ||
-      filters.value.category.includes(e.category)
-    return matchesSearch && matchesCategory
+  const searchLower = (filters.value.search || '').toLowerCase()
+  const selectedCategories = filters.value.category
+
+  return events.value.filter((event) => {
+    const titleMatch = event.title.toLowerCase().includes(searchLower)
+    const categoryMatch =
+      selectedCategories.length === 0 ||
+      selectedCategories.includes(event.category)
+    return titleMatch && categoryMatch
   })
 })
 

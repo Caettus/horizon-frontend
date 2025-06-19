@@ -33,9 +33,13 @@
         <!-- RSVP'd Users Section -->
         <v-divider class="my-4"></v-divider>
         <h4 class="text-subtitle-1 font-weight-medium">Attendees</h4>
-        <div v-if="isLoadingRsvps" class="text-center pa-4">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
-          <p>Loading attendees...</p>
+        <div v-if="isLoadingRsvps" class="pa-2">
+          <v-skeleton-loader
+            v-for="n in 3"
+            :key="n"
+            type="list-item-avatar"
+            class="mb-2"
+          ></v-skeleton-loader>
         </div>
         <div v-else-if="errorRsvps" class="text-error pa-2">
           <p>Could not load attendees: {{ errorRsvps }}</p>
@@ -66,15 +70,24 @@
       <v-card-actions>
         <v-spacer />
         <v-btn text color="primary" @click="handleClose">Sluiten</v-btn>
-        <v-btn
-          v-if="event && event.id"
-          color="success"
-          @click="onRsvpClick"
-          :loading="isRsvping"
-          :disabled="isRsvping || (authStore.isLoggedIn && isUserRsvped)"
+        <v-tooltip
+          location="top"
+          :text="authStore.isLoggedIn && isUserRsvped ? 'You have already RSVP\'d to this event.' : ''"
         >
-          {{ authStore.isLoggedIn && isUserRsvped ? "You've RSVP'd" : 'RSVP' }}
-        </v-btn>
+          <template v-slot:activator="{ props }">
+            <span v-bind="props">
+              <v-btn
+                v-if="event && event.id"
+                color="success"
+                @click="onRsvpClick"
+                :loading="isRsvping"
+                :disabled="isRsvping || (authStore.isLoggedIn && isUserRsvped)"
+              >
+                {{ authStore.isLoggedIn && isUserRsvped ? "You've RSVP'd" : "RSVP" }}
+              </v-btn>
+            </span>
+          </template>
+        </v-tooltip>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -162,16 +175,6 @@ async function handleRsvp() {
     return
   }
 
-  const optimisticUser = {
-    id: authStore.user.id,
-    username: authStore.user.username,
-    // avatarUrl can be added if available in authStore.user
-    avatarUrl: authStore.user.avatarUrl || defaultAvatar
-  };
-
-  // Optimistic update
-  rsvpedUsers.value.push(optimisticUser);
-
   isRsvping.value = true
   rsvpError.value = null
   try {
@@ -181,16 +184,11 @@ async function handleRsvp() {
     }
     await RsvpService.createRsvp(payload)
     showSnackbar("Successfully RSVP'd!")
-    // On success, no need to refetch, the UI is already updated.
+    // Re-fetch attendees to ensure the list is up-to-date.
+    await fetchRsvpedUsers(props.event.id)
   } catch (error) {
     console.error('RSVP failed:', error.response?.data || error.message)
     rsvpError.value = 'Failed to RSVP. Please try again later.'
-
-    // Revert optimistic update on failure
-    const index = rsvpedUsers.value.findIndex(user => user.id === optimisticUser.id);
-    if (index > -1) {
-      rsvpedUsers.value.splice(index, 1);
-    }
   } finally {
     isRsvping.value = false
   }
