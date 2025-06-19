@@ -73,6 +73,14 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- Snackbar for feedback -->
+  <v-snackbar v-model="snackbar" timeout="3000" top color="success">
+    {{ snackbarText }}
+    <template v-slot:actions>
+      <v-btn text @click="snackbar = false">Close</v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <script setup>
@@ -91,6 +99,14 @@ const emit = defineEmits(['update:modelValue'])
 const authStore = useAuthStore()
 const isRsvping = ref(false)
 const rsvpError = ref(null)
+
+const snackbar = ref(false)
+const snackbarText = ref('')
+
+function showSnackbar(text) {
+  snackbarText.value = text
+  snackbar.value = true
+}
 
 // State for RSVP'd users list
 const rsvpedUsers = ref([])
@@ -132,6 +148,7 @@ async function handleRsvp() {
     if (props.event && props.event.id) {
       await fetchRsvpedUsers(props.event.id)
     }
+    showSnackbar("Successfully RSVP'd!")
   } catch (error) {
     console.error('RSVP failed:', error.response?.data || error.message)
     rsvpError.value = 'Failed to RSVP. Please try again later.'

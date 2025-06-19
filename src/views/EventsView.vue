@@ -48,7 +48,13 @@
     </v-row>
 
     <!-- Events grid -->
-    <v-row dense>
+    <v-row v-if="loading" dense>
+      <v-col v-for="n in 6" :key="n" cols="12" sm="6" md="4">
+        <v-skeleton-loader type="image, article"></v-skeleton-loader>
+      </v-col>
+    </v-row>
+
+    <v-row v-if="!loading" dense>
       <v-col
         v-for="event in filtered"
         :key="event.id"
@@ -60,13 +66,24 @@
       </v-col>
 
       <!-- Als geen resultaten -->
-      <v-col cols="12" v-if="!loading && filtered.length === 0">
+      <v-col cols="12" v-if="filtered.length === 0">
         <v-alert v-if="loadingError" type="error" text>
           Oeps! We konden de evenementen niet laden, probeer het later opnieuw.
         </v-alert>
-        <v-alert v-else type="info" text>
-          Geen events gevonden. Probeer je zoektermen of filters aan te passen.
-        </v-alert>
+        <div v-else class="text-center pa-8">
+          <v-icon size="64" color="grey-lighten-1">mdi-calendar-search</v-icon>
+          <h2 class="text-h5 font-weight-medium my-4">No Events Found</h2>
+          <p class="text-body-1 grey--text text--darken-1 mb-6">
+            Try adjusting your search filters or be the first to create a new event!
+          </p>
+          <v-btn
+            v-if="authStore.isLoggedIn"
+            color="primary"
+            @click="router.push({ name: 'CreateEvent' })"
+          >
+            Create an Event
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
 
@@ -81,12 +98,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import apiClient from '@/services/apiClient'
 import EventCard from '@/components/EventCard.vue'
 import EventDetailsModal from '@/components/EventDetailsModal.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
 const events = ref([])
 const selectedEvent = ref(null)
