@@ -12,26 +12,51 @@
         <v-textarea v-model="event.description" :rules="[r.required]" label="Beschrijving" rows="4" />
       </v-col>
 
-      <v-col cols="12" md="4">
-        <v-text-field
-          v-model="event.startDate"
-          label="Startdatum en tijd"
-          type="datetime-local"
-          :rules="[r.required]"
-        />
+      <v-col cols="12" md="3">
+        <v-menu v-model="startDateMenu" :close-on-content-click="false" location="bottom">
+          <template #activator="{ props }">
+            <v-text-field
+              v-model="startDateFormatted"
+              label="Startdatum"
+              readonly
+              v-bind="props"
+              :rules="[r.required]"
+            />
+          </template>
+          <v-date-picker v-model="startDateDate" @update:model-value="startDateMenu = false" />
+        </v-menu>
       </v-col>
 
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
+        <v-text-field v-model="startDateTime" label="Starttijd" type="time" :rules="[r.required]" />
+      </v-col>
+
+      <v-col cols="12" md="3">
+        <v-menu v-model="endDateMenu" :close-on-content-click="false" location="bottom">
+          <template #activator="{ props }">
+            <v-text-field
+              v-model="endDateFormatted"
+              label="Einddatum"
+              readonly
+              v-bind="props"
+              :rules="[r.required, r.endAfterStart]"
+              :min="startDateFormatted"
+            />
+          </template>
+          <v-date-picker v-model="endDateDate" :min="startDateDate" @update:model-value="endDateMenu = false" />
+        </v-menu>
+      </v-col>
+
+      <v-col cols="12" md="3">
         <v-text-field
-          v-model="event.endDate"
-          label="Einddatum en tijd"
-          type="datetime-local"
+          v-model="endDateTime"
+          label="Eindtijd"
+          type="time"
           :rules="[r.required, r.endAfterStart]"
-          :min="event.startDate"
         />
       </v-col>
 
-      <v-col cols="12" md="4">
+      <v-col cols="12">
         <v-select v-model="event.category" :items="categories" :rules="[r.required]" label="Categorie" />
       </v-col>
 
@@ -79,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 import apiClient from '@/services/apiClient'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
@@ -112,13 +137,42 @@ const event = ref({
 const valid = ref(false)
 const loading = ref(false)
 
+const startDateMenu = ref(false)
+const endDateMenu = ref(false)
+const startDateDate = ref(null)
+const startDateTime = ref(null)
+const endDateDate = ref(null)
+const endDateTime = ref(null)
+
+const startDateFormatted = computed(() => (startDateDate.value ? new Date(startDateDate.value).toLocaleDateString('nl-NL') : ''))
+const endDateFormatted = computed(() => (endDateDate.value ? new Date(endDateDate.value).toLocaleDateString('nl-NL') : ''))
+
+watch([startDateDate, startDateTime], ([date, time]) => {
+  if (date && time) {
+    const [hours, minutes] = time.split(':')
+    const newDate = new Date(date)
+    newDate.setHours(parseInt(hours, 10))
+    newDate.setMinutes(parseInt(minutes, 10))
+    event.value.startDate = newDate.toISOString().slice(0, 16).replace('T', ' ')
+  }
+})
+
+watch([endDateDate, endDateTime], ([date, time]) => {
+  if (date && time) {
+    const [hours, minutes] = time.split(':')
+    const newDate = new Date(date)
+    newDate.setHours(parseInt(hours, 10))
+    newDate.setMinutes(parseInt(minutes, 10))
+    event.value.endDate = newDate.toISOString().slice(0, 16).replace('T', ' ')
+  }
+})
+
 const r = {
   required: v => !!v || 'Verplicht veld',
-  endAfterStart: v =>
-    !v ||
-    !event.value.startDate ||
-    new Date(v) >= new Date(event.value.startDate) ||
-    'Einddatum/tijd moet na de start liggen'
+  endAfterStart: () => {
+    if (!event.value.startDate || !event.value.endDate) return true
+    return new Date(event.value.endDate) >= new Date(event.value.startDate) || 'Einddatum/tijd moet na de start liggen'
+  }
 }
 
 async function onSubmit () {

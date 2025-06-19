@@ -43,6 +43,11 @@
         <div v-else-if="rsvpedUsers.length > 0">
           <v-list dense>
             <v-list-item v-for="user in rsvpedUsers" :key="user.id">
+              <template #prepend>
+                <v-avatar>
+                  <v-img :src="user.avatarUrl || defaultAvatar" :alt="user.username" />
+                </v-avatar>
+              </template>
               <v-list-item-title>{{ user.username || user.name || 'Unnamed User' }}</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -102,6 +107,8 @@ const rsvpError = ref(null)
 
 const snackbar = ref(false)
 const snackbarText = ref('')
+
+const defaultAvatar = 'https://cdn.vuetifyjs.com/images/john.jpg'
 
 function showSnackbar(text) {
   snackbarText.value = text

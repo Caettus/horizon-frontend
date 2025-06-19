@@ -7,11 +7,10 @@
       </v-col>
       <v-col cols="12" md="6">
         <v-text-field
-          v-model="filters.search"
+          v-model="searchInput"
           prepend-inner-icon="mdi-magnify"
           label="Zoek events..."
           clearable
-          @input="applyFilters"
         />
       </v-col>
     </v-row>
@@ -28,7 +27,6 @@
           <v-chip
             v-for="cat in categories"
             :key="cat"
-            @click="applyFilters"
             outlined
             class="ma-1"
           >
@@ -114,7 +112,16 @@ const isModalVisible = ref(false)
 const loading = ref(false)
 const loadingError = ref(false)
 const filters = ref({ search: '', category: [] })
+const searchInput = ref('')
 const categories = ref(['Online', 'Offline', 'Netwerken', 'Workshop'])
+
+let debounceTimer
+watch(searchInput, (newValue) => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    filters.value.search = newValue
+  }, 300)
+})
 
 async function loadEvents() {
   loading.value = true
@@ -131,13 +138,10 @@ async function loadEvents() {
   }
 }
 
-function applyFilters() {
-  // trigger computed
-}
-
 function clearFilters() {
   filters.value.search = ''
   filters.value.category = []
+  searchInput.value = ''
 }
 
 function showEventDetails(event) {
