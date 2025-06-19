@@ -58,6 +58,10 @@
         </v-row>
       </v-col>
 
+      <v-col cols="12">
+        <v-text-field v-model="event.imageUrl" label="Of plak een afbeeldings-URL" clearable />
+      </v-col>
+
       <v-col cols="12" md="8">
         <v-combobox v-model="event.tags" label="Tags" multiple chips clearable />
       </v-col>

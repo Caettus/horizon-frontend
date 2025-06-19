@@ -54,6 +54,10 @@
 
       </v-card-text>
 
+      <v-alert v-if="rsvpError" type="error" dense class="mx-4 mb-2">
+        {{ rsvpError }}
+      </v-alert>
+
       <v-card-actions>
         <v-spacer />
         <v-btn text color="primary" @click="handleClose">Sluiten</v-btn>
@@ -86,6 +90,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const authStore = useAuthStore()
 const isRsvping = ref(false)
+const rsvpError = ref(null)
 
 // State for RSVP'd users list
 const rsvpedUsers = ref([])
@@ -115,6 +120,7 @@ async function handleRsvp() {
   }
 
   isRsvping.value = true
+  rsvpError.value = null
   try {
     const payload = {
       eventId: props.event.id,
@@ -128,6 +134,7 @@ async function handleRsvp() {
     }
   } catch (error) {
     console.error('RSVP failed:', error.response?.data || error.message)
+    rsvpError.value = 'Failed to RSVP. Please try again later.'
   } finally {
     isRsvping.value = false
   }
