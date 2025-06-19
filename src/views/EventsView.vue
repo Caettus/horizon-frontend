@@ -38,6 +38,15 @@
       </v-col>
     </v-row>
 
+    <!-- Clear filters button -->
+    <v-row v-if="hasActiveFilters" class="mb-6">
+      <v-col>
+        <v-btn @click="clearFilters" color="primary" outlined>
+          Clear Filters
+        </v-btn>
+      </v-col>
+    </v-row>
+
     <!-- Events grid -->
     <v-row dense>
       <v-col
@@ -96,16 +105,28 @@ function applyFilters() {
   // trigger computed
 }
 
+function clearFilters() {
+  filters.value.search = ''
+  filters.value.category = []
+}
+
 function showEventDetails(event) {
   selectedEvent.value = event
   isModalVisible.value = true
 }
 
+const hasActiveFilters = computed(() => {
+  const { search, category } = filters.value
+  // The search can be null if cleared, so we check for truthiness
+  return Boolean(search) || category.length > 0
+})
+
 const filtered = computed(() => {
   return events.value.filter((e) => {
+    const searchLower = (filters.value.search || '').toLowerCase()
     const matchesSearch = e.title
       .toLowerCase()
-      .includes(filters.value.search.toLowerCase())
+      .includes(searchLower)
     const matchesCategory =
       filters.value.category.length === 0 ||
       filters.value.category.includes(e.category)

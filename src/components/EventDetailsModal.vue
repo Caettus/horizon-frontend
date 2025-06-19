@@ -62,9 +62,9 @@
           color="success"
           @click="handleRsvp"
           :loading="isRsvping"
-          :disabled="isRsvping"
+          :disabled="isRsvping || isUserRsvped"
         >
-          RSVP
+          {{ isUserRsvped ? "You've RSVP'd" : 'RSVP' }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, watch } from 'vue'
+import { defineProps, defineEmits, ref, watch, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/services/apiClient'
 import RsvpService from '@/services/rsvpService'
@@ -91,6 +91,13 @@ const isRsvping = ref(false)
 const rsvpedUsers = ref([])
 const isLoadingRsvps = ref(false)
 const errorRsvps = ref(null)
+
+const isUserRsvped = computed(() => {
+  if (!authStore.isLoggedIn || !authStore.user || !rsvpedUsers.value.length) {
+    return false
+  }
+  return rsvpedUsers.value.some(user => user.id === authStore.user.id)
+})
 
 const handleUpdate = (val) => emit('update:modelValue', val)
 const handleClose = () => {
@@ -115,10 +122,9 @@ async function handleRsvp() {
     }
     const response = await RsvpService.createRsvp(payload)
     console.log('RSVP successful:', response.data)
-    handleClose()
     // After successful RSVP, refresh the list of attendees
     if (props.event && props.event.id) {
-      fetchRsvpedUsers(props.event.id)
+      await fetchRsvpedUsers(props.event.id)
     }
   } catch (error) {
     console.error('RSVP failed:', error.response?.data || error.message)
