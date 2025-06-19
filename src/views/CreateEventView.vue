@@ -1,6 +1,6 @@
 <template>
   <v-container class="py-12">
-    <h1 class="text-h4 font-weight-bold mb-8">Nieuw event aanmaken</h1>
+    <h1 class="text-h4 font-weight-bold mb-8">Create Event</h1>
     <EventForm @created="handleCreated" />
   </v-container>
 </template>

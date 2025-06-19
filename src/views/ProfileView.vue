@@ -59,6 +59,20 @@
       @profile-saved="handleProfileUpdate"
       @profile-save-error="handleProfileSaveError"
     />
+
+    <!-- Snackbar for feedback -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      timeout="3000"
+      top
+      right
+    >
+      {{ snackbarText }}
+      <template v-slot:actions>
+        <v-btn text @click="snackbar = false">Close</v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -74,6 +88,15 @@ const authStore = useAuthStore();
 const profileStore = useProfileStore();
 
 const editDialogVisible = ref(false);
+const snackbar = ref(false);
+const snackbarText = ref('');
+const snackbarColor = ref('success');
+
+function showSnackbar(text, color = 'success') {
+  snackbarText.value = text;
+  snackbarColor.value = color;
+  snackbar.value = true;
+}
 
 function openEditDialog() {
   editDialogVisible.value = true;
@@ -83,13 +106,16 @@ async function handleProfileUpdate(updatedData) {
   try {
     await profileStore.updateProfile(updatedData);
     editDialogVisible.value = false;
+    showSnackbar('Profile saved successfully.');
   } catch (error) {
     console.error('Error updating profile:', error);
+    showSnackbar('Failed to save profile. Please try again.', 'error');
   }
 }
 
 function handleProfileSaveError(errorMessage) {
   console.error('Error saving profile:', errorMessage);
+  showSnackbar(errorMessage || 'An unexpected error occurred.', 'error');
 }
 
 async function handleLogin() {

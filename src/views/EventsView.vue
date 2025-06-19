@@ -60,8 +60,11 @@
       </v-col>
 
       <!-- Als geen resultaten -->
-      <v-col cols="12" v-if="filtered.length === 0">
-        <v-alert type="info" text>
+      <v-col cols="12" v-if="!loading && filtered.length === 0">
+        <v-alert v-if="loadingError" type="error" text>
+          Oeps! We konden de evenementen niet laden, probeer het later opnieuw.
+        </v-alert>
+        <v-alert v-else type="info" text>
           Geen events gevonden. Probeer je zoektermen of filters aan te passen.
         </v-alert>
       </v-col>
@@ -88,16 +91,23 @@ const route = useRoute()
 const events = ref([])
 const selectedEvent = ref(null)
 const isModalVisible = ref(false)
+const loading = ref(false)
+const loadingError = ref(false)
 const filters = ref({ search: '', category: [] })
 const categories = ref(['Online', 'Offline', 'Netwerken', 'Workshop'])
 
 async function loadEvents() {
+  loading.value = true
+  loadingError.value = false
   try {
     //apiClientChange
     const { data } = await apiClient.get('/events')
     events.value = data
   } catch (e) {
     console.error('Kon events niet laden:', e)
+    loadingError.value = true
+  } finally {
+    loading.value = false
   }
 }
 
@@ -134,10 +144,17 @@ const filtered = computed(() => {
   })
 })
 
-onMounted(loadEvents)
+onMounted(async () => {
+  await loadEvents()
+})
 
 // wanneer routed van /events/create terug‑‑> refresh list
-watch(() => route.fullPath, () => loadEvents())
+watch(
+  () => route.fullPath,
+  async () => {
+    await loadEvents()
+  }
+)
 
 </script>
 

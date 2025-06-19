@@ -21,7 +21,7 @@
         <!-- Desktop navigatie -->
         <v-col cols="auto" class="d-none d-md-flex">
           <v-btn text @click="goToEvents">Events</v-btn>
-          <v-btn v-if="isLoggedIn" text @click="goToCreateEvent">New Event</v-btn>
+          <v-btn v-if="isLoggedIn" text @click="goToCreateEvent">Create Event</v-btn>
           <v-btn text @click="goToProfile">Profile</v-btn>
 
           <!-- Auth buttons -->
@@ -50,7 +50,7 @@
           <v-list-item-title>Events</v-list-item-title>
         </v-list-item>
         <v-list-item v-if="isLoggedIn" link @click="goToCreateEvent">
-          <v-list-item-title>New Event</v-list-item-title>
+          <v-list-item-title>Create Event</v-list-item-title>
         </v-list-item>
         <v-list-item link @click="goToProfile">
           <v-list-item-title>Profile</v-list-item-title>
