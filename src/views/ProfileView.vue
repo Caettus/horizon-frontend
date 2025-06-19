@@ -16,24 +16,24 @@
             v-if="profileStore.loading"
             type="card-avatar, article, actions"
           />
-          <!-- B) Laden voltooid: Toon AuthenticatedProfile of "Maak Profiel Aan" bericht -->
+          <!-- B) Laden voltooid: Toon foutmelding, AuthenticatedProfile of "Maak Profiel Aan" bericht -->
           <template v-else>
-            <!--
-              Toon AuthenticatedProfile als:
-              - Er een backend profiel is (profileStore.hasProfile)
-              OF
-              - Er een fout was bij het ophalen van het backend profiel (profileStore.error).
-              AuthenticatedProfile zal Keycloak data tonen en de status van backend data (geladen, error, of leeg).
-            -->
+            <!-- Toon foutmelding als er een error is -->
+            <v-card v-if="profileStore.error" class="pa-4 text-center">
+              <v-card-title class="text-error">Error</v-card-title>
+              <v-card-text>
+                We couldn't load your profile. Please try again later.
+              </v-card-text>
+            </v-card>
+
+            <!-- Toon AuthenticatedProfile als er een backend profiel is -->
             <AuthenticatedProfile
-              v-if="profileStore.hasProfile || profileStore.error"
+              v-else-if="profileStore.hasProfile"
               :user="profileStore.profileData"
               @edit-profile="openEditDialog"
             />
-            <!--
-              Toon "Maak Profiel Aan" als:
-              - Ingelogd, niet aan het laden, geen error, EN geen backend profiel.
-            -->
+
+            <!-- Toon "Maak Profiel Aan" als ingelogd, niet ladend, geen error, en geen profiel -->
             <div v-else>
               <v-card class="pa-4 text-center">
                 <v-card-title>Welcome!</v-card-title>

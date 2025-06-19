@@ -12,48 +12,23 @@
         <v-textarea v-model="event.description" :rules="[r.required]" label="Beschrijving" rows="4" />
       </v-col>
 
-      <v-col cols="12" md="3">
-        <v-menu v-model="startDateMenu" :close-on-content-click="false" location="bottom">
-          <template #activator="{ props }">
-            <v-text-field
-              v-model="startDateFormatted"
-              label="Startdatum"
-              readonly
-              v-bind="props"
-              :rules="[r.required]"
-            />
-          </template>
-          <v-date-picker v-model="startDateDate" @update:model-value="startDateMenu = false" />
-        </v-menu>
+      <v-col cols="12" md="6">
+        <VueDatePicker
+          v-model="event.startDate"
+          :min-date="new Date()"
+          :rules="[r.required]"
+          placeholder="Startdatum en -tijd"
+          required
+        ></VueDatePicker>
       </v-col>
-
-      <v-col cols="12" md="3">
-        <v-text-field v-model="startDateTime" label="Starttijd" type="time" :rules="[r.required]" />
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-menu v-model="endDateMenu" :close-on-content-click="false" location="bottom">
-          <template #activator="{ props }">
-            <v-text-field
-              v-model="endDateFormatted"
-              label="Einddatum"
-              readonly
-              v-bind="props"
-              :rules="[r.required, r.endAfterStart]"
-              :min="startDateFormatted"
-            />
-          </template>
-          <v-date-picker v-model="endDateDate" :min="startDateDate" @update:model-value="endDateMenu = false" />
-        </v-menu>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-text-field
-          v-model="endDateTime"
-          label="Eindtijd"
-          type="time"
+      <v-col cols="12" md="6">
+        <VueDatePicker
+          v-model="event.endDate"
+          :min-date="event.startDate || new Date()"
           :rules="[r.required, r.endAfterStart]"
-        />
+          placeholder="Einddatum en -tijd"
+          required
+        ></VueDatePicker>
       </v-col>
 
       <v-col cols="12">
@@ -104,7 +79,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref } from 'vue'
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
 import apiClient from '@/services/apiClient'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
@@ -137,41 +114,15 @@ const event = ref({
 const valid = ref(false)
 const loading = ref(false)
 
-const startDateMenu = ref(false)
-const endDateMenu = ref(false)
-const startDateDate = ref(null)
-const startDateTime = ref(null)
-const endDateDate = ref(null)
-const endDateTime = ref(null)
-
-const startDateFormatted = computed(() => (startDateDate.value ? new Date(startDateDate.value).toLocaleDateString('nl-NL') : ''))
-const endDateFormatted = computed(() => (endDateDate.value ? new Date(endDateDate.value).toLocaleDateString('nl-NL') : ''))
-
-watch([startDateDate, startDateTime], ([date, time]) => {
-  if (date && time) {
-    const [hours, minutes] = time.split(':')
-    const newDate = new Date(date)
-    newDate.setHours(parseInt(hours, 10))
-    newDate.setMinutes(parseInt(minutes, 10))
-    event.value.startDate = newDate.toISOString().slice(0, 16).replace('T', ' ')
-  }
-})
-
-watch([endDateDate, endDateTime], ([date, time]) => {
-  if (date && time) {
-    const [hours, minutes] = time.split(':')
-    const newDate = new Date(date)
-    newDate.setHours(parseInt(hours, 10))
-    newDate.setMinutes(parseInt(minutes, 10))
-    event.value.endDate = newDate.toISOString().slice(0, 16).replace('T', ' ')
-  }
-})
-
 const r = {
   required: v => !!v || 'Verplicht veld',
   endAfterStart: () => {
     if (!event.value.startDate || !event.value.endDate) return true
     return new Date(event.value.endDate) >= new Date(event.value.startDate) || 'Einddatum/tijd moet na de start liggen'
+  },
+  startDateInFuture: () => {
+    if (!event.value.startDate) return true
+    return new Date(event.value.startDate) > new Date() || 'Startdatum moet in de toekomst liggen'
   }
 }
 

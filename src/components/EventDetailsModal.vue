@@ -142,6 +142,16 @@ async function handleRsvp() {
     return
   }
 
+  const optimisticUser = {
+    id: authStore.user.id,
+    username: authStore.user.username,
+    // avatarUrl can be added if available in authStore.user
+    avatarUrl: authStore.user.avatarUrl || defaultAvatar
+  };
+
+  // Optimistic update
+  rsvpedUsers.value.push(optimisticUser);
+
   isRsvping.value = true
   rsvpError.value = null
   try {
@@ -149,16 +159,18 @@ async function handleRsvp() {
       eventId: props.event.id,
       userId: authStore.user.id,
     }
-    const response = await RsvpService.createRsvp(payload)
-    console.log('RSVP successful:', response.data)
-    // After successful RSVP, refresh the list of attendees
-    if (props.event && props.event.id) {
-      await fetchRsvpedUsers(props.event.id)
-    }
+    await RsvpService.createRsvp(payload)
     showSnackbar("Successfully RSVP'd!")
+    // On success, no need to refetch, the UI is already updated.
   } catch (error) {
     console.error('RSVP failed:', error.response?.data || error.message)
     rsvpError.value = 'Failed to RSVP. Please try again later.'
+
+    // Revert optimistic update on failure
+    const index = rsvpedUsers.value.findIndex(user => user.id === optimisticUser.id);
+    if (index > -1) {
+      rsvpedUsers.value.splice(index, 1);
+    }
   } finally {
     isRsvping.value = false
   }
