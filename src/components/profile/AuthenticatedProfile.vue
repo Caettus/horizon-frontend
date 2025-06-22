@@ -42,8 +42,53 @@
       <v-btn color="primary" rounded @click="navigateToKeycloakAccount" prepend-icon="mdi-account-cog" class="ml-2">
         Manage Account
       </v-btn>
+      <v-btn color="error" rounded @click="isDeleteDialogVisible = true" prepend-icon="mdi-delete-forever" class="ml-2">
+        Delete Account
+      </v-btn>
     </v-card-actions>
   </v-card>
+
+  <!-- Account Deletion Confirmation Dialog -->
+  <v-dialog v-model="isDeleteDialogVisible" persistent max-width="500px">
+    <v-card>
+      <v-card-title class="text-h5 font-weight-bold d-flex align-center">
+        <v-icon color="warning" class="mr-2">mdi-alert-circle-outline</v-icon>
+        Confirm Account Deletion
+      </v-card-title>
+      <v-card-text>
+        <p class="mb-4">
+          This is a permanent action that cannot be undone. All your data, including your profile and event RSVPs, will be permanently erased.
+        </p>
+        <p>To confirm, please type your username "<strong>{{ profileStore.profileData.username }}</strong>" in the box below.</p>
+        <v-text-field
+          v-model="deleteConfirmationText"
+          label="Your username"
+          :placeholder="profileStore.profileData.username"
+          variant="outlined"
+          class="mt-4"
+        ></v-text-field>
+        <v-alert
+          v-if="deleteError"
+          type="error"
+          density="compact"
+          class="mt-2"
+        >
+          {{ deleteError }}
+        </v-alert>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="isDeleteDialogVisible = false">Cancel</v-btn>
+        <v-btn
+          color="error"
+          :disabled="deleteConfirmationText !== profileStore.profileData.username"
+          @click="confirmAccountDeletion"
+        >
+          Confirm & Delete
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
   <!-- My RSVPs Section -->
   <v-card v-if="!isLoading && profileStore.profileData" elevation="6" class="profile-card mx-auto mt-6" max-width="600">
@@ -110,6 +155,9 @@ const isLoadingRsvps = ref(false);
 const rsvpsError = ref(null);
 const selectedEvent = ref(null);
 const isModalVisible = ref(false);
+const isDeleteDialogVisible = ref(false);
+const deleteConfirmationText = ref('');
+const deleteError = ref('');
 
 const upcomingRsvpedEvents = computed(() => {
   const now = new Date();
@@ -172,6 +220,17 @@ async function fetchRsvpedEvents() {
     rsvpsError.value = err.response?.data?.message || err.message || 'An unknown error occurred.';
   } finally {
     isLoadingRsvps.value = false;
+  }
+}
+
+async function confirmAccountDeletion() {
+  deleteError.value = '';
+  try {
+    await profileStore.deleteAccount();
+    // On success, the store will handle logout and redirection.
+    // No need to close dialog here as the user will be navigated away.
+  } catch (err) {
+    deleteError.value = err.message || 'Failed to delete account. Please try again.';
   }
 }
 

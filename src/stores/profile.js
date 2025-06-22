@@ -17,6 +17,28 @@ export const useProfileStore = defineStore('profile', {
     profileData: (state) => state.profile,
   },
   actions: {
+    async deleteAccount() {
+      const authStore = useAuthStore();
+      if (!authStore.isLoggedIn) {
+        throw new Error('Must be logged in to delete account');
+      }
+
+      this.loading = true;
+      this.error = false;
+
+      try {
+        const keycloakId = authStore.user.id;
+        await apiClient.delete(`/users/forget/${keycloakId}`);
+        await authStore.logout();
+      } catch (error) {
+        this.error = 'Failed to delete account. Please try again.';
+        console.error('Error deleting account:', error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async fetchProfile() {
       this.loading = true;
       this.error = false;

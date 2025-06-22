@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://api.20.82.232.197.sslip.io',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
